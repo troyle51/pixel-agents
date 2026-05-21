@@ -1,3 +1,15 @@
+import {
+  BALL_SPEED,
+  BOOKSHELF_BROWSE_MAX_SEC,
+  BOOKSHELF_BROWSE_MIN_SEC,
+  COFFEE_POUR_DURATION_SEC,
+  COUCH_NAP_MAX_SEC,
+  COUCH_NAP_MIN_SEC,
+  SWING_FOLLOWTHROUGH_THRESHOLD,
+  SWING_WINDUP_THRESHOLD,
+  WATER_PLANT_DURATION_SEC,
+  WHITEBOARD_PRESENTER_ROTATE_SEC,
+} from '../../constants.js';
 import type {
   ActivitySession,
   ActivitySlotDef,
@@ -80,8 +92,30 @@ export class ActivityManager {
   }
 
   private initSession(session: ActivitySession): void {
-    // Handlers added in later tasks
-    void session;
+    switch (session.activityId) {
+      case 'ping_pong':
+        session.ballT = 0;
+        session.ballDir = 1;
+        break;
+      case 'coffee':
+        session.timer = COFFEE_POUR_DURATION_SEC;
+        break;
+      case 'couch':
+        session.timer = COUCH_NAP_MIN_SEC + Math.random() * (COUCH_NAP_MAX_SEC - COUCH_NAP_MIN_SEC);
+        break;
+      case 'water_plant':
+        session.timer = WATER_PLANT_DURATION_SEC;
+        break;
+      case 'bookshelf':
+        session.timer =
+          BOOKSHELF_BROWSE_MIN_SEC +
+          Math.random() * (BOOKSHELF_BROWSE_MAX_SEC - BOOKSHELF_BROWSE_MIN_SEC);
+        break;
+      case 'whiteboard':
+        session.presenterIdx = 0;
+        session.presenterTimer = WHITEBOARD_PRESENTER_ROTATE_SEC;
+        break;
+    }
   }
 
   leave(ch: Character, characters: Map<number, Character>): void {
@@ -128,9 +162,81 @@ export class ActivityManager {
   }
 
   update(dt: number, characters: Map<number, Character>): void {
-    // Handlers added in later tasks
-    void dt;
-    void characters;
+    for (const [uid, session] of this.sessions) {
+      if (session.phase !== 'active') continue;
+      switch (session.activityId) {
+        case 'ping_pong':
+          this.tickPingPong(session, dt, characters);
+          break;
+        case 'coffee':
+        case 'water_plant':
+        case 'couch':
+        case 'bookshelf':
+          session.timer -= dt;
+          if (session.timer <= 0) this.endSession(uid, characters);
+          break;
+        case 'whiteboard':
+          this.tickWhiteboard(session, dt, characters);
+          break;
+      }
+    }
+  }
+
+  private tickPingPong(
+    session: ActivitySession,
+    dt: number,
+    characters: Map<number, Character>,
+  ): void {
+    session.ballT += session.ballDir * BALL_SPEED * dt;
+    if (session.ballT >= 1) {
+      session.ballT = 1;
+      session.ballDir = -1;
+    }
+    if (session.ballT <= 0) {
+      session.ballT = 0;
+      session.ballDir = 1;
+    }
+
+    // slot 0 = left player (ballT=0 is their end), slot 1 = right player (ballT=1 is their end)
+    for (let i = 0; i < session.slots.length; i++) {
+      const slot = session.slots[i];
+      if (!slot.arrived || slot.participantId === null) continue;
+      const ch = characters.get(slot.participantId);
+      if (!ch) continue;
+      const proximity = i === 0 ? session.ballT : 1 - session.ballT;
+      if (proximity <= SWING_FOLLOWTHROUGH_THRESHOLD) {
+        ch.frame = 2;
+      } else if (proximity <= SWING_WINDUP_THRESHOLD) {
+        ch.frame = 1;
+      } else {
+        ch.frame = 0;
+      }
+    }
+  }
+
+  private tickWhiteboard(
+    session: ActivitySession,
+    dt: number,
+    characters: Map<number, Character>,
+  ): void {
+    session.presenterTimer -= dt;
+    if (session.presenterTimer <= 0) {
+      session.presenterTimer = WHITEBOARD_PRESENTER_ROTATE_SEC;
+      const active = session.slots
+        .map((s, i) => ({ s, i }))
+        .filter(({ s }) => s.arrived && s.participantId !== null);
+      if (active.length > 0) {
+        const cur = active.findIndex(({ i }) => i === session.presenterIdx);
+        session.presenterIdx = active[(cur + 1) % active.length].i;
+      }
+    }
+    for (let i = 0; i < session.slots.length; i++) {
+      const slot = session.slots[i];
+      if (!slot.arrived || slot.participantId === null) continue;
+      const ch = characters.get(slot.participantId);
+      if (!ch) continue;
+      ch.frame = i === session.presenterIdx ? 0 : 1;
+    }
   }
 
   getSessions(): Map<string, ActivitySession> {

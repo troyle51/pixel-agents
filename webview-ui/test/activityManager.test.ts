@@ -189,3 +189,57 @@ test('leave on solo activity removes session', () => {
   assert.equal(ch.state, CharacterState.IDLE);
   assert.equal(mgr.getSessions().size, 0);
 });
+
+test('ping_pong: ballT advances and bounces between 0 and 1', () => {
+  const mgr = new ActivityManager();
+  const ch1 = makeChar(1);
+  const ch2 = makeChar(2);
+  const { pf, entry } = ppFurniture();
+  const getCatalog = (t: string) => (t === 'PING_PONG_TABLE' ? entry : null);
+  const chars = new Map([
+    [1, ch1],
+    [2, ch2],
+  ]);
+
+  mgr.tryJoin(ch1, [pf], getCatalog, chars);
+  mgr.tryJoin(ch2, [pf], getCatalog, chars);
+  ch1.state = CharacterState.ACTIVITY;
+  ch2.state = CharacterState.ACTIVITY;
+  mgr.arrive(ch1);
+  mgr.arrive(ch2);
+
+  const session = mgr.getSessions().get('pp1')!;
+  assert.equal(session.ballDir, 1);
+
+  // Advance until ball reaches right end
+  for (let i = 0; i < 200; i++) mgr.update(0.05, chars);
+  assert.ok(session.ballT >= 0 && session.ballT <= 1, `ballT out of range: ${session.ballT}`);
+  // Ball should have bounced — direction flips
+  assert.equal(session.ballDir, -1);
+});
+
+test('ping_pong: left player gets swing frame when ball near their end', () => {
+  const mgr = new ActivityManager();
+  const ch1 = makeChar(1);
+  const ch2 = makeChar(2);
+  const { pf, entry } = ppFurniture();
+  const getCatalog = (t: string) => (t === 'PING_PONG_TABLE' ? entry : null);
+  const chars = new Map([
+    [1, ch1],
+    [2, ch2],
+  ]);
+
+  mgr.tryJoin(ch1, [pf], getCatalog, chars);
+  mgr.tryJoin(ch2, [pf], getCatalog, chars);
+  ch1.state = CharacterState.ACTIVITY;
+  ch2.state = CharacterState.ACTIVITY;
+  mgr.arrive(ch1);
+  mgr.arrive(ch2);
+
+  // Force ball to left end
+  const session = mgr.getSessions().get('pp1')!;
+  session.ballT = 0.05; // within SWING_FOLLOWTHROUGH_THRESHOLD (0.12) of left end (ballT=0)
+  mgr.update(0.001, chars);
+
+  assert.equal(ch1.frame, 2); // follow-through
+});
