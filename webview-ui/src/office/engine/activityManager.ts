@@ -23,14 +23,16 @@ export class ActivityManager {
       const entry = getCatalog(pf.type);
       if (!entry?.activityId || !entry.activitySlots?.length) continue;
 
-      let session = this.sessions.get(pf.uid);
-      if (!session) {
-        session = this.createSession(pf, entry);
-        this.sessions.set(pf.uid, session);
-      }
+      const existingSession = this.sessions.get(pf.uid);
+      const session = existingSession ?? this.createSession(pf, entry);
 
       const slotIdx = session.slots.findIndex((s) => s.participantId === null);
       if (slotIdx === -1) continue;
+
+      // Slot is available — commit the session if it's new
+      if (!existingSession) {
+        this.sessions.set(pf.uid, session);
+      }
 
       session.slots[slotIdx].participantId = ch.id;
       ch.activitySessionId = session.id;
