@@ -30,6 +30,7 @@ export const CharacterState = {
   IDLE: 'idle',
   WALK: 'walk',
   TYPE: 'type',
+  ACTIVITY: 'activity',
 } as const;
 export type CharacterState = (typeof CharacterState)[keyof typeof CharacterState];
 
@@ -40,6 +41,32 @@ export const Direction = {
   UP: 3,
 } as const;
 export type Direction = (typeof Direction)[keyof typeof Direction];
+
+export interface ActivitySlotDef {
+  offsetCol: number;
+  offsetRow: number;
+  facingDir: string;
+}
+
+export interface ActivitySlotState {
+  participantId: number | null;
+  arrived: boolean;
+}
+
+export interface ActivitySession {
+  id: string;
+  activityId: string;
+  furnitureCol: number;
+  furnitureRow: number;
+  minPlayers: number;
+  slots: ActivitySlotState[];
+  phase: 'waiting' | 'active';
+  timer: number;
+  ballT: number;
+  ballDir: 1 | -1;
+  presenterIdx: number;
+  presenterTimer: number;
+}
 
 /** 2D array of hex color strings: '' = transparent, '#RRGGBB' = opaque, '#RRGGBBAA' = semi-transparent. [row][col] */
 export type SpriteData = string[][];
@@ -104,6 +131,12 @@ export interface FurnitureCatalogEntry {
   canPlaceOnWalls?: boolean;
   /** Whether this is a side-oriented asset that produces a mirrored "left" variant */
   mirrorSide?: boolean;
+  /** Activity type ID for activities (e.g., 'ping_pong', 'coffee_machine') */
+  activityId?: string;
+  /** Minimum number of players required for this activity */
+  activityMinPlayers?: number;
+  /** Slots definition for activity participants */
+  activitySlots?: ActivitySlotDef[];
 }
 
 export interface PlacedFurniture {
@@ -196,4 +229,6 @@ export interface Character {
   inputTokens: number;
   /** Cumulative output tokens consumed */
   outputTokens: number;
+  /** Active activity session ID, or null if not participating */
+  activitySessionId: string | null;
 }

@@ -148,3 +148,17 @@ export const FUEL_COLOR_CRITICAL = '#ff2222';
 export const FUEL_GAUGE_BG = '#222';
 export const TEAM_LEAD_COLOR = '#ffd700';
 export const TEAM_ROLE_COLOR = '#66aaff';
+
+// ── Activity System ──────────────────────────────────────────
+export const ACTIVITY_SEEK_CHANCE = 0.25;
+export const BALL_SPEED = 0.6;
+export const BALL_ARC_HEIGHT_PX = 12;
+export const SWING_WINDUP_THRESHOLD = 0.25;
+export const SWING_FOLLOWTHROUGH_THRESHOLD = 0.12;
+export const WHITEBOARD_PRESENTER_ROTATE_SEC = 8;
+export const COFFEE_POUR_DURATION_SEC = 3;
+export const COUCH_NAP_MIN_SEC = 10;
+export const COUCH_NAP_MAX_SEC = 30;
+export const WATER_PLANT_DURATION_SEC = 2;
+export const BOOKSHELF_BROWSE_MIN_SEC = 5;
+export const BOOKSHELF_BROWSE_MAX_SEC = 15;
