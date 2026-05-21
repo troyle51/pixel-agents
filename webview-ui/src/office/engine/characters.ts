@@ -386,8 +386,7 @@ export function updateCharacter(
     }
 
     case CharacterState.ACTIVITY: {
-      ch.frameTimer += dt;
-      // ActivityManager drives ch.frame directly; nothing to do here.
+      // ActivityManager drives ch.frame directly; frameTimer incremented at top of function.
       break;
     }
   }
