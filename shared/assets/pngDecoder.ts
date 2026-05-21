@@ -93,8 +93,13 @@ export function parseWallPng(pngBuffer: Buffer): string[][][] {
 }
 
 /**
- * Decode a single character PNG (112×96) into direction-keyed frame arrays.
- * Each PNG has 3 direction rows (down, up, right) × 7 frames (16×32 each).
+ * Decode a single character PNG into direction-keyed frame arrays.
+ * Each PNG has 3 direction rows (down, up, right) × CHAR_FRAMES_PER_ROW frames (16×32 each).
+ *
+ * If the PNG is narrower than CHAR_FRAMES_PER_ROW * CHAR_FRAME_W (e.g. an older 7-frame
+ * PNG when the constant has been bumped to 9), frames whose start offset falls outside the
+ * PNG width are returned as empty (all-transparent) SpriteData so the decoder never reads
+ * out-of-bounds pixel data.
  */
 export function decodeCharacterPng(pngBuffer: Buffer): CharacterDirectionSprites {
   const png = PNG.sync.read(pngBuffer);
@@ -106,8 +111,19 @@ export function decodeCharacterPng(pngBuffer: Buffer): CharacterDirectionSprites
     const frames: string[][][] = [];
 
     for (let f = 0; f < CHAR_FRAMES_PER_ROW; f++) {
-      const sprite: string[][] = [];
       const frameOffsetX = f * CHAR_FRAME_W;
+
+      // Frame is outside the PNG — return an empty (all-transparent) frame.
+      if (frameOffsetX >= png.width) {
+        const emptyFrame: string[][] = [];
+        for (let y = 0; y < CHAR_FRAME_H; y++) {
+          emptyFrame.push(new Array<string>(CHAR_FRAME_W).fill(''));
+        }
+        frames.push(emptyFrame);
+        continue;
+      }
+
+      const sprite: string[][] = [];
       for (let y = 0; y < CHAR_FRAME_H; y++) {
         const row: string[] = [];
         for (let x = 0; x < CHAR_FRAME_W; x++) {
