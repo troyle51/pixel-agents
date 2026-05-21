@@ -23,6 +23,7 @@ import {
 import { findPath, getWalkableTiles, isWalkable } from '../layout/tileMap.js';
 import { getLoadedCharacterCount } from '../sprites/spriteData.js';
 import type {
+  ActivitySession,
   Character,
   FurnitureInstance,
   OfficeLayout,
@@ -31,6 +32,7 @@ import type {
   TileType as TileTypeVal,
 } from '../types.js';
 import { CharacterState, Direction, MATRIX_EFFECT_DURATION, TILE_SIZE } from '../types.js';
+import { ActivityManager } from './activityManager.js';
 import { createCharacter, updateCharacter } from './characters.js';
 import { matrixEffectSeeds } from './matrixEffect.js';
 
@@ -53,6 +55,7 @@ export class OfficeState {
   /** Reverse lookup: sub-agent character ID → parent info */
   subagentMeta: Map<number, { parentAgentId: number; parentToolId: string }> = new Map();
   private nextSubagentId = -1;
+  readonly activityManager = new ActivityManager();
 
   constructor(layout?: OfficeLayout) {
     this.layout = layout || createDefaultLayout();
@@ -561,6 +564,9 @@ export class OfficeState {
   setAgentActive(id: number, active: boolean): void {
     const ch = this.characters.get(id);
     if (ch) {
+      if (active && ch.activitySessionId) {
+        this.activityManager.leave(ch, this.characters);
+      }
       ch.isActive = active;
       if (!active) {
         // Sentinel -1: signals turn just ended, skip next seat rest timer.
@@ -720,6 +726,8 @@ export class OfficeState {
       this.rebuildFurnitureInstances();
     }
 
+    this.activityManager.update(dt, this.characters);
+
     const toDelete: number[] = [];
     for (const ch of this.characters.values()) {
       // Handle matrix effect animation
@@ -761,6 +769,10 @@ export class OfficeState {
 
   getCharacters(): Character[] {
     return Array.from(this.characters.values());
+  }
+
+  getActivitySessions(): Map<string, ActivitySession> {
+    return this.activityManager.getSessions();
   }
 
   /** Get character at pixel position (for hit testing). Returns id or null. */
