@@ -60,6 +60,7 @@ export interface CharacterSprites {
   walk: Record<Direction, [SpriteData, SpriteData, SpriteData, SpriteData]>;
   typing: Record<Direction, [SpriteData, SpriteData]>;
   reading: Record<Direction, [SpriteData, SpriteData]>;
+  swing: Record<Direction, [SpriteData, SpriteData]>;
 }
 
 const spriteCache = new Map<string, CharacterSprites>();
@@ -98,6 +99,12 @@ function hueShiftSprites(sprites: CharacterSprites, hueShift: number): Character
       [Dir.UP]: shiftPair(sprites.reading[Dir.UP]),
       [Dir.RIGHT]: shiftPair(sprites.reading[Dir.RIGHT]),
       [Dir.LEFT]: shiftPair(sprites.reading[Dir.LEFT]),
+    } as Record<Direction, [SpriteData, SpriteData]>,
+    swing: {
+      [Dir.DOWN]: shiftPair(sprites.swing[Dir.DOWN]),
+      [Dir.UP]: shiftPair(sprites.swing[Dir.UP]),
+      [Dir.RIGHT]: shiftPair(sprites.swing[Dir.RIGHT]),
+      [Dir.LEFT]: shiftPair(sprites.swing[Dir.LEFT]),
     } as Record<Direction, [SpriteData, SpriteData]>,
   };
 }
@@ -145,6 +152,12 @@ export function getCharacterSprites(paletteIndex: number, hueShift = 0): Charact
         [Dir.RIGHT]: [rt[5], rt[6]],
         [Dir.LEFT]: [flip(rt[5]), flip(rt[6])],
       },
+      swing: {
+        [Dir.DOWN]: [d[7], d[8]],
+        [Dir.UP]: [u[7], u[8]],
+        [Dir.RIGHT]: [rt[7], rt[8]],
+        [Dir.LEFT]: [flip(rt[7]), flip(rt[8])],
+      },
     };
   } else {
     // Fallback: return transparent placeholder sprites (16×32)
@@ -165,6 +178,12 @@ export function getCharacterSprites(paletteIndex: number, hueShift = 0): Charact
         [Dir.LEFT]: pairSet,
       },
       reading: {
+        [Dir.DOWN]: pairSet,
+        [Dir.UP]: pairSet,
+        [Dir.RIGHT]: pairSet,
+        [Dir.LEFT]: pairSet,
+      },
+      swing: {
         [Dir.DOWN]: pairSet,
         [Dir.UP]: pairSet,
         [Dir.RIGHT]: pairSet,

@@ -405,9 +405,9 @@ export function getCharacterSprite(ch: Character, sprites: CharacterSprites): Sp
     case CharacterState.IDLE:
       return sprites.walk[ch.dir][1];
     case CharacterState.ACTIVITY:
-      // Temporary: fall back to standing pose.
-      // Swing frame rendering (ch.frame 1 = wind-up, 2 = follow-through) will be
-      // wired in Task 8 once sprites.swing is added to CharacterSprites.
+      // frame 0 = standing, 1 = swing wind-up, 2 = swing follow-through
+      if (ch.frame === 1) return sprites.swing[ch.dir][0];
+      if (ch.frame === 2) return sprites.swing[ch.dir][1];
       return sprites.walk[ch.dir][1];
     default:
       return sprites.walk[ch.dir][1];
