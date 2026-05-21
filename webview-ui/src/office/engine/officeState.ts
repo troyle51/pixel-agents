@@ -749,7 +749,18 @@ export class OfficeState {
 
       // Temporarily unblock own seat so character can pathfind to it
       this.withOwnSeatUnblocked(ch, () =>
-        updateCharacter(ch, dt, this.walkableTiles, this.seats, this.tileMap, this.blockedTiles),
+        updateCharacter(
+          ch,
+          dt,
+          this.walkableTiles,
+          this.seats,
+          this.tileMap,
+          this.blockedTiles,
+          this.activityManager,
+          this.layout.furniture,
+          (type) => getCatalogEntry(type) ?? null,
+          this.characters,
+        ),
       );
 
       // Tick bubble timer for waiting bubbles

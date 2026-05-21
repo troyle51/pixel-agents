@@ -1,4 +1,5 @@
 import {
+  ACTIVITY_SEEK_CHANCE,
   SEAT_REST_MAX_SEC,
   SEAT_REST_MIN_SEC,
   TYPE_FRAME_DURATION_SEC,
@@ -11,7 +12,15 @@ import {
 } from '../../constants.js';
 import { findPath } from '../layout/tileMap.js';
 import type { CharacterSprites } from '../sprites/spriteData.js';
-import type { Character, Seat, SpriteData, TileType as TileTypeVal } from '../types.js';
+import type {
+  ActivitySession,
+  Character,
+  FurnitureCatalogEntry,
+  PlacedFurniture,
+  Seat,
+  SpriteData,
+  TileType as TileTypeVal,
+} from '../types.js';
 import { CharacterState, Direction, TILE_SIZE } from '../types.js';
 
 /** Tools that show reading animation instead of typing */
@@ -97,6 +106,23 @@ export function updateCharacter(
   seats: Map<string, Seat>,
   tileMap: TileTypeVal[][],
   blockedTiles: Set<string>,
+  activityManager?: {
+    tryJoin: (
+      ch: Character,
+      furniture: PlacedFurniture[],
+      getCatalog: (type: string) => FurnitureCatalogEntry | null,
+      characters: Map<number, Character>,
+    ) => {
+      session: ActivitySession;
+      slotIndex: number;
+      targetCol: number;
+      targetRow: number;
+    } | null;
+    arrive: (ch: Character) => void;
+  },
+  placedFurniture?: PlacedFurniture[],
+  getCatalog?: (type: string) => FurnitureCatalogEntry | null,
+  characters?: Map<number, Character>,
 ): void {
   ch.frameTimer += dt;
 
@@ -162,6 +188,41 @@ export function updateCharacter(
         }
         break;
       }
+      // Chance to seek an activity instead of wandering
+      if (
+        ch.wanderTimer <= 0 &&
+        !ch.activitySessionId &&
+        activityManager &&
+        placedFurniture &&
+        getCatalog &&
+        characters &&
+        Math.random() < ACTIVITY_SEEK_CHANCE
+      ) {
+        const result = activityManager.tryJoin(ch, placedFurniture, getCatalog, characters);
+        if (result) {
+          const path = findPath(
+            ch.tileCol,
+            ch.tileRow,
+            result.targetCol,
+            result.targetRow,
+            tileMap,
+            blockedTiles,
+          );
+          if (path.length > 0) {
+            ch.path = path;
+            ch.moveProgress = 0;
+            ch.state = CharacterState.WALK;
+            ch.frame = 0;
+            ch.frameTimer = 0;
+            ch.wanderTimer = 0;
+            break;
+          } else {
+            // Can't path there — undo reservation
+            result.session.slots.find((s) => s.participantId === ch.id)!.participantId = null;
+            ch.activitySessionId = null;
+          }
+        }
+      }
       // Countdown wander timer
       ch.wanderTimer -= dt;
       if (ch.wanderTimer <= 0) {
@@ -223,6 +284,15 @@ export function updateCharacter(
         const center = tileCenter(ch.tileCol, ch.tileRow);
         ch.x = center.x;
         ch.y = center.y;
+
+        // Arrived at activity slot
+        if (ch.activitySessionId && activityManager) {
+          ch.state = CharacterState.ACTIVITY;
+          ch.frame = 0;
+          ch.frameTimer = 0;
+          activityManager.arrive(ch);
+          break;
+        }
 
         if (ch.isActive) {
           if (!ch.seatId) {
@@ -314,6 +384,12 @@ export function updateCharacter(
       }
       break;
     }
+
+    case CharacterState.ACTIVITY: {
+      ch.frameTimer += dt;
+      // ActivityManager drives ch.frame directly; nothing to do here.
+      break;
+    }
   }
 }
 
@@ -328,6 +404,11 @@ export function getCharacterSprite(ch: Character, sprites: CharacterSprites): Sp
     case CharacterState.WALK:
       return sprites.walk[ch.dir][ch.frame % 4];
     case CharacterState.IDLE:
+      return sprites.walk[ch.dir][1];
+    case CharacterState.ACTIVITY:
+      // Temporary: fall back to standing pose.
+      // Swing frame rendering (ch.frame 1 = wind-up, 2 = follow-through) will be
+      // wired in Task 8 once sprites.swing is added to CharacterSprites.
       return sprites.walk[ch.dir][1];
     default:
       return sprites.walk[ch.dir][1];
