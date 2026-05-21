@@ -50,6 +50,9 @@ export interface FurnitureManifest {
   groupType?: string;
   rotationScheme?: string;
   members?: ManifestNode[];
+  activityId?: string;
+  activityMinPlayers?: number;
+  activitySlots?: Array<{ offsetCol: number; offsetRow: number; facingDir: string }>;
 }
 
 export interface InheritedProps {
@@ -63,6 +66,9 @@ export interface InheritedProps {
   state?: string;
   rotationScheme?: string;
   animationGroup?: string;
+  activityId?: string;
+  activityMinPlayers?: number;
+  activitySlots?: Array<{ offsetCol: number; offsetRow: number; facingDir: string }>;
 }
 
 export interface FurnitureAsset {
@@ -86,6 +92,9 @@ export interface FurnitureAsset {
   rotationScheme?: string;
   animationGroup?: string;
   frame?: number;
+  activityId?: string;
+  activityMinPlayers?: number;
+  activitySlots?: Array<{ offsetCol: number; offsetRow: number; facingDir: string }>;
 }
 
 /**
@@ -120,6 +129,9 @@ export function flattenManifest(node: ManifestNode, inherited: InheritedProps): 
         ...(inherited.rotationScheme ? { rotationScheme: inherited.rotationScheme } : {}),
         ...(inherited.animationGroup ? { animationGroup: inherited.animationGroup } : {}),
         ...(asset.frame !== undefined ? { frame: asset.frame } : {}),
+        ...(inherited.activityId ? { activityId: inherited.activityId } : {}),
+        ...(inherited.activityMinPlayers !== undefined ? { activityMinPlayers: inherited.activityMinPlayers } : {}),
+        ...(inherited.activitySlots ? { activitySlots: inherited.activitySlots } : {}),
       },
     ];
   }

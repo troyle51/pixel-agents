@@ -38,4 +38,7 @@ export interface CatalogEntry {
   rotationScheme?: string;
   animationGroup?: string;
   frame?: number;
+  activityId?: string;
+  activityMinPlayers?: number;
+  activitySlots?: Array<{ offsetCol: number; offsetRow: number; facingDir: string }>;
 }

@@ -63,6 +63,9 @@ export function buildFurnitureCatalog(assetsDir: string): CatalogEntry[] {
           canPlaceOnSurfaces: manifest.canPlaceOnSurfaces,
           backgroundTiles: manifest.backgroundTiles,
           groupId: manifest.id,
+          ...(manifest.activityId ? { activityId: manifest.activityId } : {}),
+          ...(manifest.activityMinPlayers !== undefined ? { activityMinPlayers: manifest.activityMinPlayers } : {}),
+          ...(manifest.activitySlots ? { activitySlots: manifest.activitySlots } : {}),
         });
       } else {
         // Group manifest — flatten into individual assets
@@ -75,6 +78,9 @@ export function buildFurnitureCatalog(assetsDir: string): CatalogEntry[] {
           canPlaceOnSurfaces: manifest.canPlaceOnSurfaces,
           backgroundTiles: manifest.backgroundTiles,
           ...(manifest.rotationScheme ? { rotationScheme: manifest.rotationScheme } : {}),
+          ...(manifest.activityId ? { activityId: manifest.activityId } : {}),
+          ...(manifest.activityMinPlayers !== undefined ? { activityMinPlayers: manifest.activityMinPlayers } : {}),
+          ...(manifest.activitySlots ? { activitySlots: manifest.activitySlots } : {}),
         };
         const rootGroup: ManifestGroup = {
           type: 'group',
