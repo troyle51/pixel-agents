@@ -20,6 +20,9 @@ export interface LoadedAssetData {
     rotationScheme?: string;
     animationGroup?: string;
     frame?: number;
+    activityId?: string;
+    activityMinPlayers?: number;
+    activitySlots?: Array<{ offsetCol: number; offsetRow: number; facingDir: string }>;
   }>;
   sprites: Record<string, SpriteData>;
 }
@@ -98,6 +101,9 @@ export function buildDynamicCatalog(assets: LoadedAssetData): boolean {
         ...(asset.backgroundTiles ? { backgroundTiles: asset.backgroundTiles } : {}),
         ...(asset.canPlaceOnWalls ? { canPlaceOnWalls: true } : {}),
         ...(asset.mirrorSide ? { mirrorSide: true } : {}),
+        ...(asset.activityId ? { activityId: asset.activityId } : {}),
+        ...(asset.activityMinPlayers !== undefined ? { activityMinPlayers: asset.activityMinPlayers } : {}),
+        ...(asset.activitySlots ? { activitySlots: asset.activitySlots } : {}),
       };
     })
     .filter((e): e is CatalogEntryWithCategory => e !== null);
