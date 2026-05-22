@@ -7,9 +7,9 @@
 export type SpriteData = string[][];
 
 export interface CharacterDirectionSprites {
-  down: string[][][];
-  up: string[][][];
-  right: string[][][];
+  down: SpriteData[];
+  up: SpriteData[];
+  right: SpriteData[];
 }
 
 export interface PetDirectionSprites {

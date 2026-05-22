@@ -15,7 +15,6 @@ import {
   CHARACTER_DIRECTIONS,
   FLOOR_TILE_SIZE,
   PET_DIRECTIONS,
-  PET_FRAME_ROWS,
   WALL_BITMASK_COUNT,
   WALL_GRID_COLS,
   WALL_PIECE_HEIGHT,
@@ -156,17 +155,17 @@ export function decodeFloorPng(pngBuffer: Buffer): string[][] {
 /**
  * Decode a pet sprite PNG into direction-keyed frame arrays.
  * Layout: 3 rows (down, up, right) × N square frames.
- * Frame size is inferred: frameSize = imageHeight / PET_FRAME_ROWS.
+ * Frame size is inferred: frameSize = imageHeight / PET_DIRECTIONS.length.
  * Frame count = imageWidth / frameSize.
  */
 export function decodePetPng(pngBuffer: Buffer): PetDirectionSprites {
   const png = PNG.sync.read(pngBuffer);
-  const frameSize = Math.floor(png.height / PET_FRAME_ROWS);
+  const frameSize = Math.floor(png.height / PET_DIRECTIONS.length);
   const frameCount = frameSize > 0 ? Math.floor(png.width / frameSize) : 0;
 
   const result: PetDirectionSprites = { down: [], up: [], right: [] };
 
-  for (let dirIdx = 0; dirIdx < PET_FRAME_ROWS; dirIdx++) {
+  for (let dirIdx = 0; dirIdx < PET_DIRECTIONS.length; dirIdx++) {
     const dirKey = PET_DIRECTIONS[dirIdx];
     const rowOffsetY = dirIdx * frameSize;
     const frames: string[][][] = [];
