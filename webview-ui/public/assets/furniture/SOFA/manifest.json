@@ -8,6 +8,12 @@
   "canPlaceOnWalls": false,
   "canPlaceOnSurfaces": false,
   "backgroundTiles": 0,
+  "activityId": "couch",
+  "activityMinPlayers": 1,
+  "activitySlots": [
+    { "offsetCol": 0, "offsetRow": 1, "facingDir": "up" },
+    { "offsetCol": 1, "offsetRow": 1, "facingDir": "up" }
+  ],
   "members": [
     {
       "type": "asset",

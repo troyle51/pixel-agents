@@ -9,5 +9,12 @@
   "width": 32,
   "height": 32,
   "footprintW": 2,
-  "footprintH": 2
+  "footprintH": 2,
+  "activityId": "whiteboard",
+  "activityMinPlayers": 2,
+  "activitySlots": [
+    { "offsetCol": 0, "offsetRow": 2, "facingDir": "up" },
+    { "offsetCol": 1, "offsetRow": 2, "facingDir": "up" },
+    { "offsetCol": -1, "offsetRow": 2, "facingDir": "up" }
+  ]
 }

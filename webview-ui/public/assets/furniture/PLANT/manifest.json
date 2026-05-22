@@ -9,5 +9,10 @@
   "width": 16,
   "height": 32,
   "footprintW": 1,
-  "footprintH": 2
+  "footprintH": 2,
+  "activityId": "water_plant",
+  "activityMinPlayers": 1,
+  "activitySlots": [
+    { "offsetCol": 0, "offsetRow": 1, "facingDir": "up" }
+  ]
 }

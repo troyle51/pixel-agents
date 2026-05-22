@@ -9,5 +9,10 @@
   "width": 32,
   "height": 16,
   "footprintW": 2,
-  "footprintH": 1
+  "footprintH": 1,
+  "activityId": "bookshelf",
+  "activityMinPlayers": 1,
+  "activitySlots": [
+    { "offsetCol": 0, "offsetRow": 1, "facingDir": "up" }
+  ]
 }
