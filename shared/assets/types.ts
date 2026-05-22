@@ -3,10 +3,19 @@
  * scripts, browser mock, and future standalone backends.
  */
 
+/** 2D array of hex color strings: '' = transparent, '#RRGGBB' = opaque, '#RRGGBBAA' = semi-transparent. */
+export type SpriteData = string[][];
+
 export interface CharacterDirectionSprites {
   down: string[][][];
   up: string[][][];
   right: string[][][];
+}
+
+export interface PetDirectionSprites {
+  down: SpriteData[];
+  up: SpriteData[];
+  right: SpriteData[];
 }
 
 export interface AssetIndex {
