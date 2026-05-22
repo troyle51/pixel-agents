@@ -29,3 +29,41 @@ test('decodePetPng: handles single-frame square PNG gracefully', () => {
   assert.equal(result.down.length, 3);
   assert.equal(result.down[0].length, 1); // 1 row tall
 });
+
+import {
+  setPetSprites,
+  getPetSprites,
+  getLoadedPetSpecies,
+} from '../src/office/sprites/petSpriteData.ts';
+import { Direction } from '../src/office/types.ts';
+
+test('getPetSprites: returns null for unknown species', () => {
+  assert.equal(getPetSprites('unknown_species'), null);
+});
+
+test('setPetSprites + getPetSprites: stores and retrieves sprite frames for all directions', () => {
+  const frame: string[][] = [['#ff0000']]; // 1×1 red pixel
+  setPetSprites([
+    {
+      speciesId: 'test_mon',
+      frames: {
+        down: [frame],
+        up: [frame],
+        right: [frame],
+      },
+    },
+  ]);
+
+  const sprites = getPetSprites('test_mon');
+  assert.ok(sprites, 'sprites should not be null');
+  assert.equal(sprites[Direction.DOWN].length, 1);
+  assert.equal(sprites[Direction.UP].length, 1);
+  assert.equal(sprites[Direction.RIGHT].length, 1);
+  // Left should be flipped right (same content for a 1×1 pixel)
+  assert.equal(sprites[Direction.LEFT].length, 1);
+});
+
+test('getLoadedPetSpecies: returns list of loaded species IDs', () => {
+  const species = getLoadedPetSpecies();
+  assert.ok(species.includes('test_mon'), 'should include previously loaded species');
+});
