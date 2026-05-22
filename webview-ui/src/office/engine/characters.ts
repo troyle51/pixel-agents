@@ -118,6 +118,16 @@ export function updateCharacter(
       targetCol: number;
       targetRow: number;
     } | null;
+    tryJoinWaiting: (
+      ch: Character,
+      furniture: PlacedFurniture[],
+      getCatalog: (type: string) => FurnitureCatalogEntry | null,
+    ) => {
+      session: ActivitySession;
+      slotIndex: number;
+      targetCol: number;
+      targetRow: number;
+    } | null;
     arrive: (ch: Character) => void;
   },
   placedFurniture?: PlacedFurniture[],
@@ -187,6 +197,32 @@ export function updateCharacter(
           }
         }
         break;
+      }
+      // Immediately join a waiting multiplayer session (no random roll, no wander timer)
+      if (!ch.activitySessionId && activityManager && placedFurniture && getCatalog && characters) {
+        const waiting = activityManager.tryJoinWaiting(ch, placedFurniture, getCatalog);
+        if (waiting) {
+          const path = findPath(
+            ch.tileCol,
+            ch.tileRow,
+            waiting.targetCol,
+            waiting.targetRow,
+            tileMap,
+            blockedTiles,
+          );
+          if (path.length > 0) {
+            ch.path = path;
+            ch.moveProgress = 0;
+            ch.state = CharacterState.WALK;
+            ch.frame = 0;
+            ch.frameTimer = 0;
+            ch.wanderTimer = 0;
+            break;
+          } else {
+            waiting.session.slots.find((s) => s.participantId === ch.id)!.participantId = null;
+            ch.activitySessionId = null;
+          }
+        }
       }
       // Chance to seek an activity instead of wandering
       if (

@@ -59,6 +59,32 @@ export class ActivityManager {
     return null;
   }
 
+  tryJoinWaiting(
+    ch: Character,
+    placedFurniture: PlacedFurniture[],
+    getCatalog: (type: string) => FurnitureCatalogEntry | null,
+  ): { session: ActivitySession; slotIndex: number; targetCol: number; targetRow: number } | null {
+    for (const session of this.sessions.values()) {
+      if (session.phase !== 'waiting' || session.minPlayers <= 1) continue;
+      const slotIdx = session.slots.findIndex((s) => s.participantId === null);
+      if (slotIdx === -1) continue;
+      const pf = placedFurniture.find((f) => f.uid === session.id);
+      if (!pf) continue;
+      const entry = getCatalog(pf.type);
+      if (!entry?.activitySlots) continue;
+      session.slots[slotIdx].participantId = ch.id;
+      ch.activitySessionId = session.id;
+      const slotDef = entry.activitySlots[slotIdx] as ActivitySlotDef;
+      return {
+        session,
+        slotIndex: slotIdx,
+        targetCol: pf.col + slotDef.offsetCol,
+        targetRow: pf.row + slotDef.offsetRow,
+      };
+    }
+    return null;
+  }
+
   private createSession(pf: PlacedFurniture, entry: FurnitureCatalogEntry): ActivitySession {
     return {
       id: pf.uid,
