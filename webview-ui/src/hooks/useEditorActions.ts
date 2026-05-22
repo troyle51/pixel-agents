@@ -499,7 +499,20 @@ export function useEditorActions(
         if (col < 0 || col >= layout.cols || row < 0 || row >= layout.rows) return;
         const idx = row * layout.cols + col;
         if (layout.tiles[idx] === TileType.VOID) return;
-        const newLayout = paintTile(layout, col, row, TileType.VOID);
+        let newLayout = paintTile(layout, col, row, TileType.VOID);
+        // Also remove any furniture whose footprint covers the erased tile
+        for (const f of layout.furniture) {
+          const entry = getCatalogEntry(f.type);
+          if (!entry) continue;
+          if (
+            col >= f.col &&
+            col < f.col + entry.footprintW &&
+            row >= f.row &&
+            row < f.row + entry.footprintH
+          ) {
+            newLayout = removeFurniture(newLayout, f.uid);
+          }
+        }
         if (newLayout !== layout) {
           applyEdit(newLayout);
         }
@@ -595,7 +608,19 @@ export function useEditorActions(
       const idx = row * layout.cols + col;
       // Only erase non-VOID tiles
       if (layout.tiles[idx] === TileType.VOID) return;
-      const newLayout = paintTile(layout, col, row, TileType.VOID);
+      let newLayout = paintTile(layout, col, row, TileType.VOID);
+      for (const f of layout.furniture) {
+        const entry = getCatalogEntry(f.type);
+        if (!entry) continue;
+        if (
+          col >= f.col &&
+          col < f.col + entry.footprintW &&
+          row >= f.row &&
+          row < f.row + entry.footprintH
+        ) {
+          newLayout = removeFurniture(newLayout, f.uid);
+        }
+      }
       if (newLayout !== layout) {
         applyEdit(newLayout);
       }
