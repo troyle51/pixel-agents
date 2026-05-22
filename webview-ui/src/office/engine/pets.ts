@@ -117,14 +117,14 @@ export function updatePet(
         break;
       }
 
-      let path = findPath(pet.tileCol, pet.tileRow, target.col, target.row, tileMap, blockedTiles);
-
-      // If BFS fails (e.g. target out of tileMap bounds but listed as walkable),
-      // build a direct single-step path so the pet still moves toward the tile.
-      if (path.length === 0 && (target.col !== pet.tileCol || target.row !== pet.tileRow)) {
-        path = [target];
-      }
-
+      const path = findPath(
+        pet.tileCol,
+        pet.tileRow,
+        target.col,
+        target.row,
+        tileMap,
+        blockedTiles,
+      );
       if (path.length > 0) {
         pet.path = path;
         pet.moveProgress = 0;

@@ -91,6 +91,7 @@ test('updatePet IDLE→WALK: starts walking when wanderTimer expires', () => {
   const tileMap = [
     [1, 1, 1],
     [1, 1, 1],
+    [1, 1, 1],
   ];
   const blocked = new Set<string>();
 
@@ -111,6 +112,7 @@ test('updatePet WALK: advances frame timer and moves along path', () => {
   updatePet(pet, 0.2, [], tileMap, new Set(), [], []);
 
   assert.ok(pet.moveProgress > 0 || pet.tileCol === 1, 'pet should have moved');
+  assert.ok(pet.frame > 0, 'frame should advance with dt=0.2 > PET_WALK_FRAME_DURATION_SEC');
 });
 
 test('updatePet WALK→IDLE: transitions when path is complete', () => {
