@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { ActivityManager } from '../src/office/engine/activityManager.js';
-import { CharacterState, Direction } from '../src/office/types.js';
 import type { Character, FurnitureCatalogEntry, PlacedFurniture } from '../src/office/types.js';
+import { CharacterState, Direction } from '../src/office/types.js';
 
 function makeChar(id: number): Character {
   return {
