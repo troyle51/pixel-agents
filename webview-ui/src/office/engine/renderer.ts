@@ -32,8 +32,10 @@ import {
   SELECTED_OUTLINE_ALPHA,
   SELECTION_DASH_PATTERN,
   SELECTION_HIGHLIGHT_COLOR,
+  STEAM_COLOR,
   VOID_TILE_DASH_PATTERN,
   VOID_TILE_OUTLINE_COLOR,
+  ZZZ_COLOR,
 } from '../../constants.js';
 import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTiles.js';
 import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js';
@@ -153,6 +155,51 @@ function renderPingPongBalls(
   }
 }
 
+function renderActivityOverlays(
+  ctx: CanvasRenderingContext2D,
+  sessions: Map<string, ActivitySession>,
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  const now = performance.now() / 1000;
+
+  for (const session of sessions.values()) {
+    if (session.phase !== 'active') continue;
+
+    const cx = (session.furnitureCol + 0.5) * TILE_SIZE * zoom + offsetX;
+    const cy = session.furnitureRow * TILE_SIZE * zoom + offsetY;
+
+    if (session.activityId === 'coffee' || session.activityId === 'water_plant') {
+      // Wispy steam: 3 small dots drifting upward, cycling ~1s
+      const cycle = now % 1;
+      for (let i = 0; i < 3; i++) {
+        const phase = (cycle + i / 3) % 1;
+        const dotY = cy - phase * 12 * zoom;
+        const dotX = cx + Math.sin(phase * Math.PI * 2) * 2 * zoom;
+        ctx.globalAlpha = phase < 0.5 ? phase * 2 * 0.6 : (1 - phase) * 2 * 0.6;
+        ctx.fillStyle = STEAM_COLOR;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, zoom * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    if (session.activityId === 'couch') {
+      // Pulsing ZZZ text above the sofa
+      const pulse = 0.7 + 0.3 * Math.sin(now * 1.5);
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = ZZZ_COLOR;
+      ctx.font = `bold ${Math.round(8 * zoom)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText('Z z z', cx, cy - 6 * zoom);
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'left';
+    }
+  }
+}
+
 /** @internal */
 export function renderScene(
   ctx: CanvasRenderingContext2D,
@@ -261,6 +308,7 @@ export function renderScene(
 
   if (activitySessions) {
     renderPingPongBalls(ctx, activitySessions, offsetX, offsetY, zoom);
+    renderActivityOverlays(ctx, activitySessions, offsetX, offsetY, zoom);
   }
 }
 
