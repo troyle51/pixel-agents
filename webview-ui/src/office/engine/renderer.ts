@@ -1,5 +1,6 @@
 import type { ColorValue } from '../../components/ui/types.js';
 import {
+  BALL_ARC_HEIGHT_PX,
   BUBBLE_FADE_DURATION_SEC,
   BUBBLE_SITTING_OFFSET_PX,
   BUBBLE_VERTICAL_OFFSET_PX,
@@ -23,6 +24,7 @@ import {
   GRID_LINE_COLOR,
   HOVERED_OUTLINE_ALPHA,
   OUTLINE_Z_SORT_OFFSET,
+  PING_PONG_BALL_COLOR,
   ROTATE_BUTTON_BG,
   SEAT_AVAILABLE_COLOR,
   SEAT_BUSY_COLOR,
@@ -41,6 +43,7 @@ import {
   getCharacterSprites,
 } from '../sprites/spriteData.js';
 import type {
+  ActivitySession,
   Character,
   FurnitureInstance,
   Seat,
@@ -106,6 +109,50 @@ interface ZDrawable {
   draw: (ctx: CanvasRenderingContext2D) => void;
 }
 
+function renderPingPongBalls(
+  ctx: CanvasRenderingContext2D,
+  sessions: Map<string, ActivitySession>,
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  for (const session of sessions.values()) {
+    if (session.activityId !== 'ping_pong' || session.phase !== 'active') continue;
+
+    const t = session.ballT;
+    if (t < 0.15 || t > 0.85) continue;
+    const alpha = t < 0.25 ? (t - 0.15) / 0.1 : t > 0.75 ? (0.85 - t) / 0.1 : 1;
+
+    const leftX = (session.furnitureCol - 1 + 0.5) * TILE_SIZE * zoom + offsetX;
+    const rightX = (session.furnitureCol + 2 + 0.5) * TILE_SIZE * zoom + offsetX;
+    const tableY = (session.furnitureRow + 0.5) * TILE_SIZE * zoom + offsetY;
+
+    const ballX = leftX + t * (rightX - leftX);
+    const arcOffset = Math.sin(t * Math.PI) * BALL_ARC_HEIGHT_PX * zoom;
+    const ballY = tableY - arcOffset;
+
+    // Trail (3 ghost dots fading behind)
+    for (let i = 3; i >= 1; i--) {
+      const tp = Math.max(0.15, t - i * 0.06);
+      const tbx = leftX + tp * (rightX - leftX);
+      const tby = tableY - Math.sin(tp * Math.PI) * BALL_ARC_HEIGHT_PX * zoom;
+      ctx.globalAlpha = alpha * (1 - i / 4) * 0.35;
+      ctx.fillStyle = PING_PONG_BALL_COLOR;
+      ctx.beginPath();
+      ctx.arc(tbx, tby, zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Ball
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = PING_PONG_BALL_COLOR;
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, zoom * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
 /** @internal */
 export function renderScene(
   ctx: CanvasRenderingContext2D,
@@ -116,6 +163,7 @@ export function renderScene(
   zoom: number,
   selectedAgentId: number | null,
   hoveredAgentId: number | null,
+  activitySessions?: Map<string, ActivitySession>,
 ): void {
   const drawables: ZDrawable[] = [];
 
@@ -209,6 +257,10 @@ export function renderScene(
 
   for (const d of drawables) {
     d.draw(ctx);
+  }
+
+  if (activitySessions) {
+    renderPingPongBalls(ctx, activitySessions, offsetX, offsetY, zoom);
   }
 }
 
@@ -582,6 +634,7 @@ export function renderFrame(
   tileColors?: Array<ColorValue | null>,
   layoutCols?: number,
   layoutRows?: number,
+  activitySessions?: Map<string, ActivitySession>,
 ): { offsetX: number; offsetY: number } {
   // Clear
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -620,7 +673,17 @@ export function renderFrame(
   // Draw walls + furniture + characters (z-sorted)
   const selectedId = selection?.selectedAgentId ?? null;
   const hoveredId = selection?.hoveredAgentId ?? null;
-  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId);
+  renderScene(
+    ctx,
+    allFurniture,
+    characters,
+    offsetX,
+    offsetY,
+    zoom,
+    selectedId,
+    hoveredId,
+    activitySessions,
+  );
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
