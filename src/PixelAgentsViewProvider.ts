@@ -28,12 +28,14 @@ import {
   loadExternalCharacterSprites,
   loadFloorTiles,
   loadFurnitureAssets,
+  loadPetSprites,
   loadWallTiles,
   mergeCharacterSprites,
   mergeLoadedAssets,
   sendAssetsToWebview,
   sendCharacterSpritesToWebview,
   sendFloorTilesToWebview,
+  sendPetSpritesToWebview,
   sendWallTilesToWebview,
 } from './assetLoader.js';
 import { readConfig, writeConfig } from './configPersistence.js';
@@ -677,6 +679,11 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
             if (assets && this.webview) {
               console.log('[Extension] ✅ Assets loaded, sending to webview');
               sendAssetsToWebview(this.webview, assets);
+            }
+
+            const petSprites = await loadPetSprites(assetsRoot);
+            if (this.webview) {
+              sendPetSpritesToWebview(this.webview, petSprites);
             }
           } catch (err) {
             console.error('[Extension] ❌ Error loading assets:', err);
