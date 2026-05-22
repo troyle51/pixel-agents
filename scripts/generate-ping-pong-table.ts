@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generates PING_PONG_TABLE.png — a 32×16 pixel art ping pong table.
+ * Generates PING_PONG_TABLE.png — a 64×32 pixel art ping pong table (4×2 tiles).
  * Run: npx tsx scripts/generate-ping-pong-table.ts
  */
 import * as fs from 'fs';
@@ -14,11 +14,10 @@ const OUT = path.resolve(
   '../webview-ui/public/assets/furniture/PING_PONG_TABLE/PING_PONG_TABLE.png',
 );
 
-const W = 32,
-  H = 16;
+const W = 64,
+  H = 32;
 const png = new PNG({ width: W, height: H });
 
-// Fill transparent
 for (let i = 0; i < png.data.length; i++) png.data[i] = 0;
 
 function px(x: number, y: number, r: number, g: number, b: number, a = 255): void {
@@ -30,43 +29,63 @@ function px(x: number, y: number, r: number, g: number, b: number, a = 255): voi
   png.data[i + 3] = a;
 }
 
-// Table surface (green): rows 6-10, cols 2-29
-for (let y = 6; y <= 10; y++) {
-  for (let x = 2; x <= 29; x++) {
-    px(x, y, 45, 122, 58);
-  }
+function rect(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  r: number,
+  g: number,
+  b: number,
+  a = 255,
+): void {
+  for (let y = y1; y <= y2; y++) for (let x = x1; x <= x2; x++) px(x, y, r, g, b, a);
 }
-// White center line: col 15-16, rows 6-10
-for (let y = 6; y <= 10; y++) {
-  px(15, y, 255, 255, 255);
-  px(16, y, 255, 255, 255);
+
+// Table surface (green): 4px padding on sides, occupies most of the height
+rect(4, 12, 59, 22, 45, 122, 58);
+
+// Table border (dark green outline)
+for (let x = 4; x <= 59; x++) {
+  px(x, 12, 28, 80, 38);
+  px(x, 22, 28, 80, 38);
 }
-// Net: col 15-16, rows 4-6 (stands above table)
-for (let y = 4; y <= 6; y++) {
-  px(15, y, 230, 230, 230);
-  px(16, y, 230, 230, 230);
+for (let y = 12; y <= 22; y++) {
+  px(4, y, 28, 80, 38);
+  px(59, y, 28, 80, 38);
 }
-// Table border: dark green outline
-for (let x = 2; x <= 29; x++) {
-  px(x, 6, 28, 80, 38);
-  px(x, 10, 28, 80, 38);
+
+// White center line (vertical, 2px wide)
+for (let y = 12; y <= 22; y++) {
+  px(31, y, 255, 255, 255);
+  px(32, y, 255, 255, 255);
 }
-for (let y = 6; y <= 10; y++) {
-  px(2, y, 28, 80, 38);
-  px(29, y, 28, 80, 38);
+
+// Net posts (2px × 3px each side of center line)
+rect(29, 9, 30, 12, 180, 140, 80);
+rect(33, 9, 34, 12, 180, 140, 80);
+
+// Net mesh (grey, between posts, above table)
+for (let y = 9; y <= 11; y++) {
+  px(31, y, 210, 210, 210);
+  px(32, y, 210, 210, 210);
 }
-// Table legs: 4 corners
-[
-  [3, 11],
-  [3, 12],
-  [3, 13],
-  [28, 11],
-  [28, 12],
-  [28, 13],
-].forEach(([x, y]) => px(x, y, 80, 50, 30));
-// Shadow under table
-for (let x = 4; x <= 28; x++) {
-  px(x, 14, 0, 0, 0, 40);
+// Net top bar
+px(29, 9, 200, 160, 90);
+px(30, 9, 200, 160, 90);
+px(31, 9, 200, 160, 90);
+px(32, 9, 200, 160, 90);
+px(33, 9, 200, 160, 90);
+px(34, 9, 200, 160, 90);
+
+// Table legs (4 corners, below table)
+rect(5, 23, 6, 27, 80, 50, 30);
+rect(57, 23, 58, 27, 80, 50, 30);
+
+// Shadow
+for (let x = 6; x <= 58; x++) {
+  px(x, 28, 0, 0, 0, 35);
+  px(x, 29, 0, 0, 0, 20);
 }
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });

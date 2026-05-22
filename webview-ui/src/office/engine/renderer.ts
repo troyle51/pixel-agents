@@ -126,8 +126,8 @@ function renderPingPongBalls(
     const alpha = t < 0.25 ? (t - 0.15) / 0.1 : t > 0.75 ? (0.85 - t) / 0.1 : 1;
 
     const leftX = (session.furnitureCol - 1 + 0.5) * TILE_SIZE * zoom + offsetX;
-    const rightX = (session.furnitureCol + 2 + 0.5) * TILE_SIZE * zoom + offsetX;
-    const tableY = (session.furnitureRow + 0.5) * TILE_SIZE * zoom + offsetY;
+    const rightX = (session.furnitureCol + 4 + 0.5) * TILE_SIZE * zoom + offsetX;
+    const tableY = (session.furnitureRow + 1 + 0.5) * TILE_SIZE * zoom + offsetY;
 
     const ballX = leftX + t * (rightX - leftX);
     const arcOffset = Math.sin(t * Math.PI) * BALL_ARC_HEIGHT_PX * zoom;

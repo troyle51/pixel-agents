@@ -7,14 +7,14 @@
   "canPlaceOnSurfaces": false,
   "backgroundTiles": 0,
   "file": "PING_PONG_TABLE.png",
-  "width": 32,
-  "height": 16,
-  "footprintW": 2,
-  "footprintH": 1,
+  "width": 64,
+  "height": 32,
+  "footprintW": 4,
+  "footprintH": 2,
   "activityId": "ping_pong",
   "activityMinPlayers": 2,
   "activitySlots": [
-    { "offsetCol": -1, "offsetRow": 0, "facingDir": "right" },
-    { "offsetCol": 2,  "offsetRow": 0, "facingDir": "left" }
+    { "offsetCol": -1, "offsetRow": 1, "facingDir": "right" },
+    { "offsetCol": 4,  "offsetRow": 1, "facingDir": "left" }
   ]
 }
