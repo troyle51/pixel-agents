@@ -1,0 +1,19 @@
+{
+  "id": "COFFEE_MACHINE",
+  "name": "Coffee Machine",
+  "category": "electronics",
+  "type": "asset",
+  "canPlaceOnWalls": false,
+  "canPlaceOnSurfaces": false,
+  "backgroundTiles": 0,
+  "file": "COFFEE_MACHINE.png",
+  "width": 16,
+  "height": 32,
+  "footprintW": 1,
+  "footprintH": 1,
+  "activityId": "coffee",
+  "activityMinPlayers": 1,
+  "activitySlots": [
+    { "offsetCol": 0, "offsetRow": 1, "facingDir": "up" }
+  ]
+}
