@@ -34,6 +34,12 @@ export const CharacterState = {
 } as const;
 export type CharacterState = (typeof CharacterState)[keyof typeof CharacterState];
 
+export const PetState = {
+  IDLE: 'idle',
+  WALK: 'walk',
+} as const;
+export type PetState = (typeof PetState)[keyof typeof PetState];
+
 export const Direction = {
   DOWN: 0,
   LEFT: 1,
@@ -231,4 +237,20 @@ export interface Character {
   outputTokens: number;
   /** Active activity session ID, or null if not participating */
   activitySessionId: string | null;
+}
+
+export interface Pet {
+  id: number;
+  speciesId: string;
+  state: PetState;
+  dir: Direction;
+  x: number;
+  y: number;
+  tileCol: number;
+  tileRow: number;
+  path: Array<{ col: number; row: number }>;
+  moveProgress: number;
+  frame: number;
+  frameTimer: number;
+  wanderTimer: number;
 }
