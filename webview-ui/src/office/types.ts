@@ -51,6 +51,7 @@ export interface ActivitySlotDef {
 export interface ActivitySlotState {
   participantId: number | null;
   arrived: boolean;
+  facingDir: Direction;
 }
 
 export interface ActivitySession {

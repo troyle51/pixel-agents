@@ -92,6 +92,11 @@ export async function loadFurnitureAssets(workspaceRoot: string): Promise<Loaded
           canPlaceOnWalls: manifest.canPlaceOnWalls,
           canPlaceOnSurfaces: manifest.canPlaceOnSurfaces,
           backgroundTiles: manifest.backgroundTiles,
+          ...(manifest.activityId ? { activityId: manifest.activityId } : {}),
+          ...(manifest.activityMinPlayers !== undefined
+            ? { activityMinPlayers: manifest.activityMinPlayers }
+            : {}),
+          ...(manifest.activitySlots ? { activitySlots: manifest.activitySlots } : {}),
         };
 
         let assets: FurnitureAsset[];
@@ -114,6 +119,11 @@ export async function loadFurnitureAssets(workspaceRoot: string): Promise<Loaded
               canPlaceOnSurfaces: manifest.canPlaceOnSurfaces,
               backgroundTiles: manifest.backgroundTiles,
               groupId: manifest.id,
+              ...(manifest.activityId ? { activityId: manifest.activityId } : {}),
+              ...(manifest.activityMinPlayers !== undefined
+                ? { activityMinPlayers: manifest.activityMinPlayers }
+                : {}),
+              ...(manifest.activitySlots ? { activitySlots: manifest.activitySlots } : {}),
             },
           ];
         } else {

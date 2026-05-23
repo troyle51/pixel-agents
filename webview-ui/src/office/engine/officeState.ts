@@ -329,6 +329,10 @@ export class OfficeState {
     const ch = this.characters.get(id);
     if (!ch) return;
     if (ch.matrixEffect === 'despawn') return; // already despawning
+    // Leave any active activity session so multiplayer sessions end cleanly
+    if (ch.activitySessionId) {
+      this.activityManager.leave(ch, this.characters);
+    }
     // Free seat and clear selection immediately
     if (ch.seatId) {
       const seat = this.seats.get(ch.seatId);
@@ -504,6 +508,9 @@ export class OfficeState {
         this.subagentMeta.delete(id);
         return;
       }
+      if (ch.activitySessionId) {
+        this.activityManager.leave(ch, this.characters);
+      }
       if (ch.seatId) {
         const seat = this.seats.get(ch.seatId);
         if (seat) seat.assigned = false;
@@ -534,6 +541,9 @@ export class OfficeState {
             this.subagentMeta.delete(id);
             toRemove.push(key);
             continue;
+          }
+          if (ch.activitySessionId) {
+            this.activityManager.leave(ch, this.characters);
           }
           if (ch.seatId) {
             const seat = this.seats.get(ch.seatId);

@@ -17,7 +17,20 @@ import type {
   FurnitureCatalogEntry,
   PlacedFurniture,
 } from '../types.js';
-import { CharacterState } from '../types.js';
+import { CharacterState, Direction } from '../types.js';
+
+function parseFacingDir(dir: string): Direction {
+  switch (dir.toLowerCase()) {
+    case 'up':
+      return Direction.UP;
+    case 'left':
+      return Direction.LEFT;
+    case 'right':
+      return Direction.RIGHT;
+    default:
+      return Direction.DOWN;
+  }
+}
 
 export class ActivityManager {
   private sessions = new Map<string, ActivitySession>();
@@ -92,7 +105,11 @@ export class ActivityManager {
       furnitureCol: pf.col,
       furnitureRow: pf.row,
       minPlayers: entry.activityMinPlayers ?? 1,
-      slots: (entry.activitySlots ?? []).map(() => ({ participantId: null, arrived: false })),
+      slots: (entry.activitySlots ?? []).map((slotDef) => ({
+        participantId: null,
+        arrived: false,
+        facingDir: parseFacingDir(slotDef.facingDir),
+      })),
       phase: 'waiting',
       timer: 0,
       ballT: 0.5,
@@ -109,6 +126,7 @@ export class ActivityManager {
     const slot = session.slots.find((s) => s.participantId === ch.id);
     if (!slot) return;
     slot.arrived = true;
+    ch.dir = slot.facingDir;
 
     const arrivedCount = session.slots.filter((s) => s.arrived).length;
     if (arrivedCount >= session.minPlayers) {
@@ -261,7 +279,8 @@ export class ActivityManager {
       if (!slot.arrived || slot.participantId === null) continue;
       const ch = characters.get(slot.participantId);
       if (!ch) continue;
-      ch.frame = i === session.presenterIdx ? 0 : 1;
+      // frame 3 = presenter (typing/gesturing), frame 4 = audience (reading/watching)
+      ch.frame = i === session.presenterIdx ? 3 : 4;
     }
   }
 

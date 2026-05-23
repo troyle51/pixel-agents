@@ -60,7 +60,11 @@ export interface CharacterSprites {
   walk: Record<Direction, [SpriteData, SpriteData, SpriteData, SpriteData]>;
   typing: Record<Direction, [SpriteData, SpriteData]>;
   reading: Record<Direction, [SpriteData, SpriteData]>;
-  swing: Record<Direction, [SpriteData, SpriteData]>;
+  // Activity sprites (PNG frames 7-10)
+  pingPongWindup: Record<Direction, SpriteData>;
+  pingPongHit: Record<Direction, SpriteData>;
+  whiteboardPresent: Record<Direction, SpriteData>;
+  whiteboardWatch: Record<Direction, SpriteData>;
 }
 
 const spriteCache = new Map<string, CharacterSprites>();
@@ -81,6 +85,14 @@ function hueShiftSprites(sprites: CharacterSprites, hueShift: number): Character
     shift(arr[0]),
     shift(arr[1]),
   ];
+  const shiftDir = (rec: Record<Direction, SpriteData>): Record<Direction, SpriteData> =>
+    ({
+      [Dir.DOWN]: shift(rec[Dir.DOWN]),
+      [Dir.UP]: shift(rec[Dir.UP]),
+      [Dir.RIGHT]: shift(rec[Dir.RIGHT]),
+      [Dir.LEFT]: shift(rec[Dir.LEFT]),
+    }) as Record<Direction, SpriteData>;
+
   return {
     walk: {
       [Dir.DOWN]: shiftWalk(sprites.walk[Dir.DOWN]),
@@ -100,12 +112,10 @@ function hueShiftSprites(sprites: CharacterSprites, hueShift: number): Character
       [Dir.RIGHT]: shiftPair(sprites.reading[Dir.RIGHT]),
       [Dir.LEFT]: shiftPair(sprites.reading[Dir.LEFT]),
     } as Record<Direction, [SpriteData, SpriteData]>,
-    swing: {
-      [Dir.DOWN]: shiftPair(sprites.swing[Dir.DOWN]),
-      [Dir.UP]: shiftPair(sprites.swing[Dir.UP]),
-      [Dir.RIGHT]: shiftPair(sprites.swing[Dir.RIGHT]),
-      [Dir.LEFT]: shiftPair(sprites.swing[Dir.LEFT]),
-    } as Record<Direction, [SpriteData, SpriteData]>,
+    pingPongWindup: shiftDir(sprites.pingPongWindup),
+    pingPongHit: shiftDir(sprites.pingPongHit),
+    whiteboardPresent: shiftDir(sprites.whiteboardPresent),
+    whiteboardWatch: shiftDir(sprites.whiteboardWatch),
   };
 }
 
@@ -126,7 +136,6 @@ export function getCharacterSprites(paletteIndex: number, hueShift = 0): Charact
   let sprites: CharacterSprites;
 
   if (loadedCharacters) {
-    // Use pre-colored character sprites directly (no palette swapping)
     const char = loadedCharacters[paletteIndex % loadedCharacters.length];
     const d = char.down;
     const u = char.up;
@@ -152,18 +161,40 @@ export function getCharacterSprites(paletteIndex: number, hueShift = 0): Charact
         [Dir.RIGHT]: [rt[5], rt[6]],
         [Dir.LEFT]: [flip(rt[5]), flip(rt[6])],
       },
-      swing: {
-        [Dir.DOWN]: [d[7], d[8]],
-        [Dir.UP]: [u[7], u[8]],
-        [Dir.RIGHT]: [rt[7], rt[8]],
-        [Dir.LEFT]: [flip(rt[7]), flip(rt[8])],
+      // Activity frames 7-10 from PNG (fallback to walk[1] if not decoded yet)
+      pingPongWindup: {
+        [Dir.DOWN]: d[7] ?? d[1],
+        [Dir.UP]: u[7] ?? u[1],
+        [Dir.RIGHT]: rt[7] ?? rt[1],
+        [Dir.LEFT]: flip(rt[7] ?? rt[1]),
+      },
+      pingPongHit: {
+        [Dir.DOWN]: d[8] ?? d[1],
+        [Dir.UP]: u[8] ?? u[1],
+        [Dir.RIGHT]: rt[8] ?? rt[1],
+        [Dir.LEFT]: flip(rt[8] ?? rt[1]),
+      },
+      whiteboardPresent: {
+        [Dir.DOWN]: d[9] ?? d[1],
+        [Dir.UP]: u[9] ?? u[1],
+        [Dir.RIGHT]: rt[9] ?? rt[1],
+        [Dir.LEFT]: flip(rt[9] ?? rt[1]),
+      },
+      whiteboardWatch: {
+        [Dir.DOWN]: d[10] ?? d[1],
+        [Dir.UP]: u[10] ?? u[1],
+        [Dir.RIGHT]: rt[10] ?? rt[1],
+        [Dir.LEFT]: flip(rt[10] ?? rt[1]),
       },
     };
   } else {
-    // Fallback: return transparent placeholder sprites (16×32)
     const e = emptySprite(16, 32);
     const walkSet: [SpriteData, SpriteData, SpriteData, SpriteData] = [e, e, e, e];
     const pairSet: [SpriteData, SpriteData] = [e, e];
+    const dirSet = { [Dir.DOWN]: e, [Dir.UP]: e, [Dir.RIGHT]: e, [Dir.LEFT]: e } as Record<
+      Direction,
+      SpriteData
+    >;
     sprites = {
       walk: {
         [Dir.DOWN]: walkSet,
@@ -183,16 +214,13 @@ export function getCharacterSprites(paletteIndex: number, hueShift = 0): Charact
         [Dir.RIGHT]: pairSet,
         [Dir.LEFT]: pairSet,
       },
-      swing: {
-        [Dir.DOWN]: pairSet,
-        [Dir.UP]: pairSet,
-        [Dir.RIGHT]: pairSet,
-        [Dir.LEFT]: pairSet,
-      },
+      pingPongWindup: dirSet,
+      pingPongHit: dirSet,
+      whiteboardPresent: dirSet,
+      whiteboardWatch: dirSet,
     };
   }
 
-  // Apply hue shift if non-zero
   if (hueShift !== 0) {
     sprites = hueShiftSprites(sprites, hueShift);
   }

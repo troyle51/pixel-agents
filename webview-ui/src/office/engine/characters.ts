@@ -224,41 +224,6 @@ export function updateCharacter(
           }
         }
       }
-      // Chance to seek an activity instead of wandering
-      if (
-        ch.wanderTimer <= 0 &&
-        !ch.activitySessionId &&
-        activityManager &&
-        placedFurniture &&
-        getCatalog &&
-        characters &&
-        Math.random() < ACTIVITY_SEEK_CHANCE
-      ) {
-        const result = activityManager.tryJoin(ch, placedFurniture, getCatalog, characters);
-        if (result) {
-          const path = findPath(
-            ch.tileCol,
-            ch.tileRow,
-            result.targetCol,
-            result.targetRow,
-            tileMap,
-            blockedTiles,
-          );
-          if (path.length > 0) {
-            ch.path = path;
-            ch.moveProgress = 0;
-            ch.state = CharacterState.WALK;
-            ch.frame = 0;
-            ch.frameTimer = 0;
-            ch.wanderTimer = 0;
-            break;
-          } else {
-            // Can't path there — undo reservation
-            result.session.slots.find((s) => s.participantId === ch.id)!.participantId = null;
-            ch.activitySessionId = null;
-          }
-        }
-      }
       // Countdown wander timer
       ch.wanderTimer -= dt;
       if (ch.wanderTimer <= 0) {
@@ -281,6 +246,40 @@ export function updateCharacter(
               ch.frame = 0;
               ch.frameTimer = 0;
               break;
+            }
+          }
+        }
+        // Chance to seek an activity instead of wandering
+        if (
+          !ch.activitySessionId &&
+          activityManager &&
+          placedFurniture &&
+          getCatalog &&
+          characters &&
+          Math.random() < ACTIVITY_SEEK_CHANCE
+        ) {
+          const result = activityManager.tryJoin(ch, placedFurniture, getCatalog, characters);
+          if (result) {
+            const path = findPath(
+              ch.tileCol,
+              ch.tileRow,
+              result.targetCol,
+              result.targetRow,
+              tileMap,
+              blockedTiles,
+            );
+            if (path.length > 0) {
+              ch.path = path;
+              ch.moveProgress = 0;
+              ch.state = CharacterState.WALK;
+              ch.frame = 0;
+              ch.frameTimer = 0;
+              ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC);
+              break;
+            } else {
+              // Can't path there — undo reservation
+              result.session.slots.find((s) => s.participantId === ch.id)!.participantId = null;
+              ch.activitySessionId = null;
             }
           }
         }
@@ -441,9 +440,12 @@ export function getCharacterSprite(ch: Character, sprites: CharacterSprites): Sp
     case CharacterState.IDLE:
       return sprites.walk[ch.dir][1];
     case CharacterState.ACTIVITY:
-      // frame 0 = standing, 1 = swing wind-up, 2 = swing follow-through
-      if (ch.frame === 1) return sprites.swing[ch.dir][0];
-      if (ch.frame === 2) return sprites.swing[ch.dir][1];
+      // Ping pong: 0=standing, 1=windup, 2=hit
+      if (ch.frame === 1) return sprites.pingPongWindup[ch.dir];
+      if (ch.frame === 2) return sprites.pingPongHit[ch.dir];
+      // Whiteboard: 3=presenter, 4=audience
+      if (ch.frame === 3) return sprites.whiteboardPresent[ch.dir];
+      if (ch.frame === 4) return sprites.whiteboardWatch[ch.dir];
       return sprites.walk[ch.dir][1];
     default:
       return sprites.walk[ch.dir][1];
