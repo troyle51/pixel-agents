@@ -24,7 +24,7 @@ const SPECIES: Array<{ num: string; name: string }> = [
   { num: '0052', name: 'meowth' },
 ];
 
-const PMD_DIRS_TO_EXTRACT = [0, 4, 6]; // Down, Up, Right
+const PMD_DIRS_TO_EXTRACT = [0, 4, 2]; // Down, Up, Right — S(0)=Down, N(4)=Up, E(2)=Right
 const PMD_ROWS_PER_DIRECTION = 2;
 
 async function fetchBuffer(url: string): Promise<Buffer> {
@@ -95,11 +95,44 @@ function convert(pngBuf: Buffer, xmlStr: string, name: string, outDir: string): 
   console.log(`  ✅ ${name}.png  (${outW}×${outH}, ${frameCount} frames)`);
 }
 
+function convertDebug(pngBuf: Buffer, xmlStr: string, name: string, outDir: string): void {
+  const { frameWidth, frameHeight, frameCount } = parseAnimData(xmlStr);
+  const srcPng = PNG.sync.read(pngBuf);
+  const frameSize = frameWidth;
+  const rowW = frameCount * frameSize;
+  console.log(`  ${frameWidth}x${frameHeight}px, ${frameCount} frames — writing 8 direction rows`);
+  for (let d = 0; d < 8; d++) {
+    const srcYStart = d * PMD_ROWS_PER_DIRECTION * frameHeight;
+    const out = new PNG({ width: rowW, height: frameSize });
+    out.data.fill(0);
+    for (let f = 0; f < frameCount; f++) {
+      for (let y = 0; y < frameSize; y++) {
+        for (let x = 0; x < frameSize; x++) {
+          const srcX = f * frameWidth + x;
+          const srcY = srcYStart + y;
+          if (srcY >= srcPng.height || srcX >= srcPng.width) continue;
+          const si = (srcY * srcPng.width + srcX) * 4;
+          const di = (y * rowW + f * frameSize + x) * 4;
+          out.data[di] = srcPng.data[si];
+          out.data[di + 1] = srcPng.data[si + 1];
+          out.data[di + 2] = srcPng.data[si + 2];
+          out.data[di + 3] = srcPng.data[si + 3];
+        }
+      }
+    }
+    fs.writeFileSync(path.join(outDir, `${name}_dir${d}.png`), PNG.sync.write(out));
+  }
+  console.log(`  ✅ wrote ${name}_dir{0..7}.png to ${outDir}`);
+}
+
 async function main(): Promise<void> {
+  const debugMode = process.argv.includes('--debug');
   const outDir = path.resolve(__dirname, '..', 'webview-ui', 'public', 'assets', 'pets');
   fs.mkdirSync(outDir, { recursive: true });
 
-  for (const { num, name } of SPECIES) {
+  const speciesToProcess = debugMode ? SPECIES.slice(0, 1) : SPECIES;
+
+  for (const { num, name } of speciesToProcess) {
     process.stdout.write(`Downloading ${name} (#${num})... `);
     try {
       const [pngBuf, xmlBuf] = await Promise.all([
@@ -107,7 +140,12 @@ async function main(): Promise<void> {
         fetchBuffer(`${BASE_URL}/${num}/AnimData.xml`),
       ]);
       process.stdout.write('converting... ');
-      convert(pngBuf, xmlBuf.toString('utf-8'), name, outDir);
+      if (debugMode) {
+        console.log('');
+        convertDebug(pngBuf, xmlBuf.toString('utf-8'), name, outDir);
+      } else {
+        convert(pngBuf, xmlBuf.toString('utf-8'), name, outDir);
+      }
     } catch (err) {
       console.log(`  ❌ ${name}: ${err instanceof Error ? err.message : err}`);
     }
