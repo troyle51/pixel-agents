@@ -72,6 +72,7 @@ test('getLoadedPetSpecies: returns list of loaded species IDs', () => {
 
 import { createPet, updatePet } from '../src/office/engine/pets.ts';
 import { PetState, TileType } from '../src/office/types.ts';
+import { PET_WALK_FRAME_DURATION_SEC } from '../src/constants.ts';
 
 test('createPet: initializes pet at correct tile position', () => {
   const pet = createPet(1, 'pikachu', 3, 5);
@@ -116,6 +117,31 @@ test('updatePet WALK: advances frame timer and moves along path', () => {
 
   assert.ok(pet.moveProgress > 0 || pet.tileCol === 1, 'pet should have moved');
   assert.ok(pet.frame > 0, 'frame should advance with dt=0.2 > PET_WALK_FRAME_DURATION_SEC');
+});
+
+test('updatePet WALK: advances frame past 4 when species has 8 frames', () => {
+  const frame: string[][] = [['#ff0000']];
+  const eightFrames = [frame, frame, frame, frame, frame, frame, frame, frame];
+  setPetSprites([
+    {
+      speciesId: 'eight_frame_mon',
+      frames: { down: eightFrames, up: eightFrames, right: eightFrames },
+    },
+  ]);
+
+  const pet = createPet(99, 'eight_frame_mon', 0, 0);
+  pet.state = PetState.WALK;
+  pet.path = [{ col: 1, row: 0 }];
+  pet.frame = 3;
+  pet.frameTimer = 0;
+
+  const tileMap: TileType[][] = [[TileType.FLOOR_1, TileType.FLOOR_1]];
+  for (let i = 0; i < 10; i++) {
+    updatePet(pet, PET_WALK_FRAME_DURATION_SEC * 1.1, [], tileMap, new Set(), [], []);
+    if (pet.frame > 4) break;
+  }
+
+  assert.ok(pet.frame > 4, `frame should advance past 4, got ${pet.frame}`);
 });
 
 test('updatePet WALK→IDLE: transitions when path is complete', () => {
