@@ -49,6 +49,9 @@ export function createPet(id: number, speciesId: string, tileCol: number, tileRo
     frame: 0,
     frameTimer: 0,
     wanderTimer: randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC),
+    matrixEffect: null,
+    matrixEffectTimer: 0,
+    matrixEffectSeeds: [],
   };
 }
 

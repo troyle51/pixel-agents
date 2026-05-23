@@ -70,9 +70,9 @@ test('getLoadedPetSpecies: returns list of loaded species IDs', () => {
   assert.ok(species.includes('test_mon'), 'should include previously loaded species');
 });
 
+import { PET_WALK_FRAME_DURATION_SEC } from '../src/constants.ts';
 import { createPet, updatePet } from '../src/office/engine/pets.ts';
 import { PetState, TileType } from '../src/office/types.ts';
-import { PET_WALK_FRAME_DURATION_SEC } from '../src/constants.ts';
 
 test('createPet: initializes pet at correct tile position', () => {
   const pet = createPet(1, 'pikachu', 3, 5);
@@ -84,6 +84,13 @@ test('createPet: initializes pet at correct tile position', () => {
   // Pixel position should be tile center (TILE_SIZE = 16)
   assert.equal(pet.x, 3 * 16 + 8);
   assert.equal(pet.y, 5 * 16 + 8);
+});
+
+test('createPet: initializes matrixEffect fields to null/zero/empty', () => {
+  const pet = createPet(1, 'pikachu', 2, 3);
+  assert.equal(pet.matrixEffect, null);
+  assert.equal(pet.matrixEffectTimer, 0);
+  assert.deepEqual(pet.matrixEffectSeeds, []);
 });
 
 test('updatePet IDLE→WALK: starts walking when wanderTimer expires', () => {

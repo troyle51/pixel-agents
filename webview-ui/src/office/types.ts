@@ -254,4 +254,7 @@ export interface Pet {
   frame: number;
   frameTimer: number;
   wanderTimer: number;
+  matrixEffect: 'spawn' | 'despawn' | null;
+  matrixEffectTimer: number;
+  matrixEffectSeeds: number[];
 }
