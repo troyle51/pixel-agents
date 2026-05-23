@@ -810,6 +810,14 @@ export class OfficeState {
     }
 
     for (const pet of this.pets.values()) {
+      if (pet.matrixEffect) {
+        pet.matrixEffectTimer += dt;
+        if (pet.matrixEffect === 'spawn' && pet.matrixEffectTimer >= MATRIX_EFFECT_DURATION) {
+          pet.matrixEffect = null;
+          pet.matrixEffectTimer = 0;
+        }
+        continue;
+      }
       updatePet(
         pet,
         dt,
