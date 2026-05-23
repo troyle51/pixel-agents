@@ -10,8 +10,9 @@ import {
   HUE_SHIFT_RANGE_DEG,
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
+  PET_FIXED_SPECIES,
+  PET_RANDOM_COUNT,
   PET_ROTATION_INTERVAL_SEC,
-  PET_SPAWN_COUNT,
   WAITING_BUBBLE_DURATION_SEC,
 } from '../../constants.js';
 import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js';
@@ -249,11 +250,12 @@ export class OfficeState {
     this.pets.clear();
     this.nextPetId = 1;
 
-    const count = Math.min(PET_SPAWN_COUNT, loadedSpecies.length);
-    const shuffled = [...loadedSpecies].sort(() => Math.random() - 0.5);
-    for (let i = 0; i < count; i++) {
-      const speciesId = shuffled[i];
-      if (!getPetSprites(speciesId)) continue;
+    const fixed = PET_FIXED_SPECIES.filter((id) => getPetSprites(id));
+    const remaining = [...loadedSpecies].filter((id) => !fixed.includes(id));
+    remaining.sort(() => Math.random() - 0.5);
+    const toSpawn = [...fixed, ...remaining.slice(0, PET_RANDOM_COUNT)];
+
+    for (const speciesId of toSpawn) {
       const tile = this.walkableTiles[Math.floor(Math.random() * this.walkableTiles.length)];
       const pet = createPet(this.nextPetId++, speciesId, tile.col, tile.row);
       pet.matrixEffect = 'spawn';
