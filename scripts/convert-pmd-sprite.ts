@@ -38,14 +38,21 @@ function parseAnimData(xml: string): AnimInfo {
   const frameWidth = parseInt(doc.getElementsByTagName('FrameWidth')[0]?.textContent ?? '24', 10);
   const frameHeight = parseInt(doc.getElementsByTagName('FrameHeight')[0]?.textContent ?? '24', 10);
 
-  // Find WanderingAround to get frame count
+  // Find Walk animation to get frame dimensions and count
   const anims = doc.getElementsByTagName('Anim');
   let frameCount = 4;
   for (let i = 0; i < anims.length; i++) {
     const nameEl = anims[i].getElementsByTagName('Name')[0];
-    if (nameEl?.textContent === 'WanderingAround') {
-      const durations = anims[i].getElementsByTagName('Duration');
-      frameCount = durations.length;
+    if (nameEl?.textContent === 'Walk') {
+      frameWidth = parseInt(
+        anims[i].getElementsByTagName('FrameWidth')[0]?.textContent ?? String(frameWidth),
+        10,
+      );
+      frameHeight = parseInt(
+        anims[i].getElementsByTagName('FrameHeight')[0]?.textContent ?? String(frameHeight),
+        10,
+      );
+      frameCount = anims[i].getElementsByTagName('Duration').length;
       break;
     }
   }
@@ -66,12 +73,10 @@ function main(): void {
   const entries = zip.getEntries();
 
   const animXmlEntry = entries.find((e) => e.entryName.endsWith('AnimData.xml'));
-  const animPngEntry = entries.find((e) =>
-    e.entryName.toLowerCase().endsWith('wanderingaround-anim.png'),
-  );
+  const animPngEntry = entries.find((e) => e.entryName.toLowerCase().endsWith('walk-anim.png'));
 
   if (!animXmlEntry || !animPngEntry) {
-    console.error('ZIP must contain AnimData.xml and WanderingAround-Anim.png');
+    console.error('ZIP must contain AnimData.xml and Walk-Anim.png');
     process.exit(1);
   }
 
