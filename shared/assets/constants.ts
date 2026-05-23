@@ -17,3 +17,6 @@ export const CHAR_FRAME_W = 16;
 export const CHAR_FRAME_H = 32;
 export const CHAR_FRAMES_PER_ROW = 11;
 export const CHAR_COUNT = 6;
+
+export const PET_DIRECTIONS = ['down', 'up', 'right'] as const;
+export type PetDirectionKey = (typeof PET_DIRECTIONS)[number];

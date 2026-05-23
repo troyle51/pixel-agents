@@ -268,6 +268,7 @@ export function OfficeCanvas({
           officeState.getLayout().cols,
           officeState.getLayout().rows,
           officeState.getActivitySessions(),
+          officeState.getPets(),
         );
         offsetRef.current = { x: offsetX, y: offsetY };
 

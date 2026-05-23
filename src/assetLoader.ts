@@ -20,10 +20,11 @@ import { flattenManifest } from '../shared/assets/manifestUtils.js';
 import {
   decodeCharacterPng,
   decodeFloorPng,
+  decodePetPng,
   parseWallPng,
   pngToSpriteData,
 } from '../shared/assets/pngDecoder.js';
-import type { CharacterDirectionSprites } from '../shared/assets/types.js';
+import type { CharacterDirectionSprites, PetDirectionSprites } from '../shared/assets/types.js';
 export type { CharacterDirectionSprites } from '../shared/assets/types.js';
 
 import { LAYOUT_REVISION_KEY } from './constants.js';
@@ -511,6 +512,64 @@ export function sendCharacterSpritesToWebview(
     characters: charSprites.characters,
   });
   console.log(`📤 Sent ${charSprites.characters.length} character sprites to webview`);
+}
+
+// ── Pet sprite loading ───────────────────────────────────────
+
+export interface LoadedPetSprite {
+  speciesId: string;
+  frames: PetDirectionSprites;
+}
+
+export interface LoadedPetSprites {
+  pets: LoadedPetSprite[];
+}
+
+export async function loadPetSprites(assetsRoot: string): Promise<LoadedPetSprites> {
+  const petsDir = path.join(assetsRoot, 'assets', 'pets');
+  const pets: LoadedPetSprite[] = [];
+
+  if (!fs.existsSync(petsDir)) {
+    console.log('[AssetLoader] No pets/ directory found — skipping pet sprites');
+    return { pets };
+  }
+
+  const entries = fs.readdirSync(petsDir);
+  for (const entry of entries) {
+    if (!/\.png$/i.test(entry)) continue;
+    const speciesId = entry.replace(/\.png$/i, '').toLowerCase();
+    const filePath = path.join(petsDir, entry);
+    const resolvedFile = path.resolve(filePath);
+    const resolvedDir = path.resolve(petsDir);
+    if (!resolvedFile.startsWith(resolvedDir + path.sep)) {
+      console.warn(`[AssetLoader] Skipping pet with path outside directory: ${entry}`);
+      continue;
+    }
+    try {
+      const pngBuffer = fs.readFileSync(filePath);
+      const frames = decodePetPng(pngBuffer);
+      pets.push({ speciesId, frames });
+      console.log(`[AssetLoader] Loaded pet sprite: ${speciesId}`);
+    } catch (err) {
+      console.warn(
+        `[AssetLoader] ⚠️  Error loading pet ${entry}: ${err instanceof Error ? err.message : err}`,
+      );
+    }
+  }
+
+  console.log(`[AssetLoader] ✅ Loaded ${pets.length} pet sprite(s)`);
+  return { pets };
+}
+
+export function sendPetSpritesToWebview(
+  webview: vscode.Webview,
+  petSprites: LoadedPetSprites,
+): void {
+  webview.postMessage({
+    type: 'petSpritesLoaded',
+    pets: petSprites.pets,
+  });
+  console.log(`📤 Sent ${petSprites.pets.length} pet sprite(s) to webview`);
 }
 
 /**

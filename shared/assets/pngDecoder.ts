@@ -14,12 +14,13 @@ import {
   CHAR_FRAMES_PER_ROW,
   CHARACTER_DIRECTIONS,
   FLOOR_TILE_SIZE,
+  PET_DIRECTIONS,
   WALL_BITMASK_COUNT,
   WALL_GRID_COLS,
   WALL_PIECE_HEIGHT,
   WALL_PIECE_WIDTH,
 } from './constants.js';
-import type { CharacterDirectionSprites } from './types.js';
+import type { CharacterDirectionSprites, PetDirectionSprites } from './types.js';
 
 // ── Sprite decoding ──────────────────────────────────────────
 
@@ -149,4 +150,43 @@ export function decodeCharacterPng(pngBuffer: Buffer): CharacterDirectionSprites
  */
 export function decodeFloorPng(pngBuffer: Buffer): string[][] {
   return pngToSpriteData(pngBuffer, FLOOR_TILE_SIZE, FLOOR_TILE_SIZE);
+}
+
+/**
+ * Decode a pet sprite PNG into direction-keyed frame arrays.
+ * Layout: 3 rows (down, up, right) × N square frames.
+ * Frame size is inferred: frameSize = imageHeight / PET_DIRECTIONS.length.
+ * Frame count = imageWidth / frameSize.
+ */
+export function decodePetPng(pngBuffer: Buffer): PetDirectionSprites {
+  const png = PNG.sync.read(pngBuffer);
+  const frameSize = Math.floor(png.height / PET_DIRECTIONS.length);
+  const frameCount = frameSize > 0 ? Math.floor(png.width / frameSize) : 0;
+
+  const result: PetDirectionSprites = { down: [], up: [], right: [] };
+
+  for (let dirIdx = 0; dirIdx < PET_DIRECTIONS.length; dirIdx++) {
+    const dirKey = PET_DIRECTIONS[dirIdx];
+    const rowOffsetY = dirIdx * frameSize;
+    const frames: string[][][] = [];
+
+    for (let f = 0; f < frameCount; f++) {
+      const frameOffsetX = f * frameSize;
+      const sprite: string[][] = [];
+      for (let y = 0; y < frameSize; y++) {
+        const row: string[] = [];
+        for (let x = 0; x < frameSize; x++) {
+          const idx = ((rowOffsetY + y) * png.width + (frameOffsetX + x)) * 4;
+          row.push(
+            rgbaToHex(png.data[idx], png.data[idx + 1], png.data[idx + 2], png.data[idx + 3]),
+          );
+        }
+        sprite.push(row);
+      }
+      frames.push(sprite);
+    }
+    result[dirKey] = frames;
+  }
+
+  return result;
 }
