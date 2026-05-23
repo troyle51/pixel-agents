@@ -14,8 +14,14 @@ import {
   matrixGreenDim,
   matrixGreenMid,
 } from '../../constants.js';
-import type { Character, SpriteData } from '../types.js';
+import type { SpriteData } from '../types.js';
 import { MATRIX_EFFECT_DURATION } from '../types.js';
+
+export interface MatrixEffectEntity {
+  matrixEffect: 'spawn' | 'despawn' | null;
+  matrixEffectTimer: number;
+  matrixEffectSeeds: number[];
+}
 
 /** Hash-based flicker: ~70% visible for shimmer effect */
 function flickerVisible(col: number, row: number, time: number): boolean {
@@ -40,27 +46,30 @@ export { generateSeeds as matrixEffectSeeds };
  */
 export function renderMatrixEffect(
   ctx: CanvasRenderingContext2D,
-  ch: Character,
+  entity: MatrixEffectEntity,
   spriteData: SpriteData,
   drawX: number,
   drawY: number,
   zoom: number,
 ): void {
-  const progress = ch.matrixEffectTimer / MATRIX_EFFECT_DURATION;
-  const isSpawn = ch.matrixEffect === 'spawn';
-  const time = ch.matrixEffectTimer;
-  const totalSweep = MATRIX_SPRITE_ROWS + MATRIX_TRAIL_LENGTH;
+  const progress = entity.matrixEffectTimer / MATRIX_EFFECT_DURATION;
+  const isSpawn = entity.matrixEffect === 'spawn';
+  const time = entity.matrixEffectTimer;
+  const spriteCols = spriteData[0]?.length ?? MATRIX_SPRITE_COLS;
+  const spriteRows = spriteData.length ?? MATRIX_SPRITE_ROWS;
+  const totalSweep = spriteRows + MATRIX_TRAIL_LENGTH;
 
-  for (let col = 0; col < MATRIX_SPRITE_COLS; col++) {
+  for (let col = 0; col < spriteCols; col++) {
     // Stagger: each column starts at a slightly different time
-    const stagger = (ch.matrixEffectSeeds[col] ?? 0) * MATRIX_COLUMN_STAGGER_RANGE;
+    const stagger =
+      (entity.matrixEffectSeeds[col] ?? (col * 0.137) % 1) * MATRIX_COLUMN_STAGGER_RANGE;
     const colProgress = Math.max(
       0,
       Math.min(1, (progress - stagger) / (1 - MATRIX_COLUMN_STAGGER_RANGE)),
     );
     const headRow = colProgress * totalSweep;
 
-    for (let row = 0; row < MATRIX_SPRITE_ROWS; row++) {
+    for (let row = 0; row < spriteRows; row++) {
       const pixel = spriteData[row]?.[col];
       const hasPixel = pixel && pixel !== '';
       const distFromHead = headRow - row;
