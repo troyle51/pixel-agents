@@ -112,7 +112,7 @@ export const PERMISSION_NOTE_DURATION_SEC = 0.15;
 export const PERMISSION_VOLUME = 0.12;
 
 // ── Pet Animation & Behavior ────────────────────────────────
-export const PET_FIXED_SPECIES = ['popplio', 'pikachu', 'eevee'];
+export const PET_FIXED_SPECIES = ['squirtle', 'pikachu', 'eevee'];
 export const PET_RANDOM_COUNT = 5;
 export const PET_ROTATION_INTERVAL_SEC = 600;
 export const PET_WANDER_PAUSE_MIN_SEC = 2.0;
