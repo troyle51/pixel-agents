@@ -10,8 +10,7 @@ import {
   HUE_SHIFT_RANGE_DEG,
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
-  PET_COUNT_MAX,
-  PET_COUNT_MIN,
+  PET_SPAWN_COUNT,
   WAITING_BUBBLE_DURATION_SEC,
 } from '../../constants.js';
 import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js';
@@ -247,7 +246,7 @@ export class OfficeState {
     this.pets.clear();
     this.nextPetId = 1;
 
-    const count = PET_COUNT_MIN + Math.floor(Math.random() * (PET_COUNT_MAX - PET_COUNT_MIN + 1));
+    const count = Math.min(PET_SPAWN_COUNT, loadedSpecies.length);
     const shuffled = [...loadedSpecies].sort(() => Math.random() - 0.5);
     for (let i = 0; i < count; i++) {
       const speciesId = shuffled[i % shuffled.length];

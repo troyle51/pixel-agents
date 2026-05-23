@@ -112,8 +112,8 @@ export const PERMISSION_NOTE_DURATION_SEC = 0.15;
 export const PERMISSION_VOLUME = 0.12;
 
 // ── Pet Animation & Behavior ────────────────────────────────
-export const PET_COUNT_MIN = 3;
-export const PET_COUNT_MAX = 5;
+export const PET_SPAWN_COUNT = 5;
+export const PET_ROTATION_INTERVAL_SEC = 600;
 export const PET_WANDER_PAUSE_MIN_SEC = 2.0;
 export const PET_WANDER_PAUSE_MAX_SEC = 8.0;
 export const PET_WALK_SPEED_PX_PER_SEC = 32;
