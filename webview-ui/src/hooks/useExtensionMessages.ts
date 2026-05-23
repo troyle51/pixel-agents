@@ -5,6 +5,7 @@ import type { OfficeState } from '../office/engine/officeState.js';
 import { setFloorSprites } from '../office/floorTiles.js';
 import { buildDynamicCatalog } from '../office/layout/furnitureCatalog.js';
 import { migrateLayoutColors } from '../office/layout/layoutSerializer.js';
+import { getLoadedPetSpecies, setPetSprites } from '../office/sprites/petSpriteData.js';
 import { setCharacterTemplates } from '../office/sprites/spriteData.js';
 import { extractToolName } from '../office/toolUtils.js';
 import type { OfficeLayout, ToolActivity } from '../office/types.js';
@@ -492,6 +493,18 @@ export function useExtensionMessages(
           setLoadedAssets({ catalog, sprites });
         } catch (err) {
           console.error(`❌ Webview: Error processing furnitureAssetsLoaded:`, err);
+        }
+      } else if (msg.type === 'petSpritesLoaded') {
+        setPetSprites(
+          msg.pets as Array<{
+            speciesId: string;
+            frames: { down: string[][][]; up: string[][][]; right: string[][][] };
+          }>,
+        );
+        const os = getOfficeState();
+        const species = getLoadedPetSpecies();
+        if (species.length > 0) {
+          os.spawnPets(species);
         }
       } else if (msg.type === 'agentTeamInfo') {
         const id = msg.id as number;

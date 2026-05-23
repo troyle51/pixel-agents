@@ -10,6 +10,8 @@ import {
   HUE_SHIFT_RANGE_DEG,
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
+  PET_COUNT_MAX,
+  PET_COUNT_MIN,
   WAITING_BUBBLE_DURATION_SEC,
 } from '../../constants.js';
 import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js';
@@ -21,7 +23,9 @@ import {
   layoutToTileMap,
 } from '../layout/layoutSerializer.js';
 import { findPath, getWalkableTiles, isWalkable } from '../layout/tileMap.js';
+import { getPetSprites } from '../sprites/petSpriteData.js';
 import { getLoadedCharacterCount } from '../sprites/spriteData.js';
+import type { Pet } from '../types.js';
 import type {
   ActivitySession,
   Character,
@@ -35,6 +39,7 @@ import { CharacterState, Direction, MATRIX_EFFECT_DURATION, TILE_SIZE } from '..
 import { ActivityManager } from './activityManager.js';
 import { createCharacter, updateCharacter } from './characters.js';
 import { matrixEffectSeeds } from './matrixEffect.js';
+import { createPet, updatePet } from './pets.js';
 
 export class OfficeState {
   layout: OfficeLayout;
@@ -44,6 +49,8 @@ export class OfficeState {
   furniture: FurnitureInstance[];
   walkableTiles: Array<{ col: number; row: number }>;
   characters: Map<number, Character> = new Map();
+  pets: Map<number, Pet> = new Map();
+  private nextPetId = 1;
   /** Accumulated time for furniture animation frame cycling */
   furnitureAnimTimer = 0;
   selectedAgentId: number | null = null;
@@ -233,6 +240,22 @@ export class OfficeState {
     if (pcSeats.length > 0) return pcSeats[Math.floor(Math.random() * pcSeats.length)];
     if (otherSeats.length > 0) return otherSeats[Math.floor(Math.random() * otherSeats.length)];
     return null;
+  }
+
+  spawnPets(loadedSpecies: string[]): void {
+    if (loadedSpecies.length === 0 || this.walkableTiles.length === 0) return;
+    this.pets.clear();
+    this.nextPetId = 1;
+
+    const count = PET_COUNT_MIN + Math.floor(Math.random() * (PET_COUNT_MAX - PET_COUNT_MIN + 1));
+    const shuffled = [...loadedSpecies].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < count; i++) {
+      const speciesId = shuffled[i % shuffled.length];
+      if (!getPetSprites(speciesId)) continue;
+      const tile = this.walkableTiles[Math.floor(Math.random() * this.walkableTiles.length)];
+      const pet = createPet(this.nextPetId++, speciesId, tile.col, tile.row);
+      this.pets.set(pet.id, pet);
+    }
   }
 
   /**
@@ -776,10 +799,27 @@ export class OfficeState {
     for (const id of toDelete) {
       this.characters.delete(id);
     }
+
+    for (const pet of this.pets.values()) {
+      updatePet(
+        pet,
+        dt,
+        this.walkableTiles,
+        this.tileMap,
+        this.blockedTiles,
+        Array.from(this.characters.values()),
+        this.layout.furniture,
+        (type) => getCatalogEntry(type) ?? null,
+      );
+    }
   }
 
   getCharacters(): Character[] {
     return Array.from(this.characters.values());
+  }
+
+  getPets(): Pet[] {
+    return Array.from(this.pets.values());
   }
 
   getActivitySessions(): Map<string, ActivitySession> {
