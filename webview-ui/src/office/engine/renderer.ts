@@ -38,6 +38,7 @@ import {
   ZZZ_COLOR,
 } from '../../constants.js';
 import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTiles.js';
+import { getPetSprite } from '../sprites/petSpriteData.js';
 import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js';
 import {
   BUBBLE_PERMISSION_SPRITE,
@@ -48,6 +49,7 @@ import type {
   ActivitySession,
   Character,
   FurnitureInstance,
+  Pet,
   Seat,
   SpriteData,
   TileType as TileTypeVal,
@@ -211,6 +213,7 @@ export function renderScene(
   selectedAgentId: number | null,
   hoveredAgentId: number | null,
   activitySessions?: Map<string, ActivitySession>,
+  pets?: Pet[],
 ): void {
   const drawables: ZDrawable[] = [];
 
@@ -297,6 +300,24 @@ export function renderScene(
         c.drawImage(cached, drawX, drawY);
       },
     });
+  }
+
+  // Pets
+  if (pets) {
+    for (const pet of pets) {
+      const spriteData = getPetSprite(pet.speciesId, pet.dir, pet.frame);
+      if (!spriteData) continue;
+      const cached = getCachedSprite(spriteData, zoom);
+      const drawX = Math.round(offsetX + pet.x * zoom - cached.width / 2);
+      const drawY = Math.round(offsetY + pet.y * zoom - cached.height);
+      const petZY = pet.y + TILE_SIZE / 2 + CHARACTER_Z_SORT_OFFSET;
+      drawables.push({
+        zY: petZY,
+        draw: (c) => {
+          c.drawImage(cached, drawX, drawY);
+        },
+      });
+    }
   }
 
   // Sort by Y (lower = in front = drawn later)
@@ -683,6 +704,7 @@ export function renderFrame(
   layoutCols?: number,
   layoutRows?: number,
   activitySessions?: Map<string, ActivitySession>,
+  pets?: Pet[],
 ): { offsetX: number; offsetY: number } {
   // Clear
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -731,6 +753,7 @@ export function renderFrame(
     selectedId,
     hoveredId,
     activitySessions,
+    pets,
   );
 
   // Speech bubbles (always on top of characters)
