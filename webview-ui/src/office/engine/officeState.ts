@@ -10,6 +10,7 @@ import {
   HUE_SHIFT_RANGE_DEG,
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
+  PET_ROTATION_INTERVAL_SEC,
   PET_SPAWN_COUNT,
   WAITING_BUBBLE_DURATION_SEC,
 } from '../../constants.js';
@@ -22,7 +23,7 @@ import {
   layoutToTileMap,
 } from '../layout/layoutSerializer.js';
 import { findPath, getWalkableTiles, isWalkable } from '../layout/tileMap.js';
-import { getPetSprites } from '../sprites/petSpriteData.js';
+import { getLoadedPetSpecies, getPetSprites } from '../sprites/petSpriteData.js';
 import { getLoadedCharacterCount } from '../sprites/spriteData.js';
 import type { Pet } from '../types.js';
 import type {
@@ -50,6 +51,8 @@ export class OfficeState {
   characters: Map<number, Character> = new Map();
   pets: Map<number, Pet> = new Map();
   private nextPetId = 1;
+  private petRotationTimer = PET_ROTATION_INTERVAL_SEC;
+  private pendingPetRespawn: number | null = null;
   /** Accumulated time for furniture animation frame cycling */
   furnitureAnimTimer = 0;
   selectedAgentId: number | null = null;
@@ -249,10 +252,13 @@ export class OfficeState {
     const count = Math.min(PET_SPAWN_COUNT, loadedSpecies.length);
     const shuffled = [...loadedSpecies].sort(() => Math.random() - 0.5);
     for (let i = 0; i < count; i++) {
-      const speciesId = shuffled[i % shuffled.length];
+      const speciesId = shuffled[i];
       if (!getPetSprites(speciesId)) continue;
       const tile = this.walkableTiles[Math.floor(Math.random() * this.walkableTiles.length)];
       const pet = createPet(this.nextPetId++, speciesId, tile.col, tile.row);
+      pet.matrixEffect = 'spawn';
+      pet.matrixEffectTimer = 0;
+      pet.matrixEffectSeeds = matrixEffectSeeds();
       this.pets.set(pet.id, pet);
     }
   }
@@ -749,7 +755,35 @@ export class OfficeState {
     ch.outputTokens = outputTokens;
   }
 
+  private tickPetRotation(dt: number): void {
+    if (this.pendingPetRespawn !== null) {
+      this.pendingPetRespawn -= dt;
+      if (this.pendingPetRespawn <= 0) {
+        this.pendingPetRespawn = null;
+        this.pets.clear();
+        this.nextPetId = 1;
+        this.spawnPets(getLoadedPetSpecies());
+      }
+      return;
+    }
+
+    this.petRotationTimer -= dt;
+    if (this.petRotationTimer <= 0) {
+      this.petRotationTimer = PET_ROTATION_INTERVAL_SEC;
+      for (const pet of this.pets.values()) {
+        if (pet.matrixEffect !== 'despawn') {
+          pet.matrixEffect = 'despawn';
+          pet.matrixEffectTimer = 0;
+          pet.matrixEffectSeeds = matrixEffectSeeds();
+        }
+      }
+      this.pendingPetRespawn = MATRIX_EFFECT_DURATION + 0.05;
+    }
+  }
+
   update(dt: number): void {
+    this.tickPetRotation(dt);
+
     // Furniture animation cycling
     const prevFrame = Math.floor(this.furnitureAnimTimer / FURNITURE_ANIM_INTERVAL_SEC);
     this.furnitureAnimTimer += dt;
