@@ -318,10 +318,11 @@ function convert(pngBuf: Buffer, xmlStr: string, name: string, outDir: string): 
   const outPng = new PNG({ width: outW, height: outH });
   outPng.data.fill(0);
 
+  const bodyRows = Math.min(frameSize, frameHeight); // don't read past body into shadow row
   PMD_DIRS_TO_EXTRACT.forEach((pmdDir, dstRow) => {
     const srcYStart = pmdDir * PMD_ROWS_PER_DIRECTION * frameHeight;
     for (let f = 0; f < frameCount; f++) {
-      for (let y = 0; y < frameSize; y++) {
+      for (let y = 0; y < bodyRows; y++) {
         for (let x = 0; x < frameSize; x++) {
           const srcX = f * frameWidth + x;
           const srcY = srcYStart + y;
