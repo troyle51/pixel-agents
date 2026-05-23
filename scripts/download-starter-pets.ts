@@ -271,7 +271,7 @@ const FAN_FAVORITES: Array<{ num: string; name: string }> = [
 
 const SPECIES = [...GEN1, ...FAN_FAVORITES];
 
-const PMD_DIRS_TO_EXTRACT = [0, 4, 2]; // Down, Up, Right — S(0)=Down, N(4)=Up, E(2)=Right
+const PMD_DIRS_TO_EXTRACT = [0, 2, 3]; // Down, Up, Right — dir0=Down, dir2=Up, dir3=Right (6-dir layout)
 const PMD_ROWS_PER_DIRECTION = 2;
 
 async function fetchBuffer(url: string): Promise<Buffer> {

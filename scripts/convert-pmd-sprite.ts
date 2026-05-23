@@ -4,8 +4,8 @@
  *
  * Usage: npx tsx scripts/convert-pmd-sprite.ts <path/to/species.zip> <speciesId>
  *
- * PMD direction row order (pmdcollab 8-direction sheet, body+shadow pairs):
- *   S(0)=Down, SE(1), E(2)=Right, NE(3), N(4)=Up, NW(5), W(6)=Left, SW(7)
+ * PMD direction row order (6-direction sheet, body+shadow pairs):
+ *   dir0=Down, dir1=Down-Right, dir2=Up, dir3=Right, dir4=Down-Left, dir5=Left
  *   Each direction occupies 2 rows (body + shadow). Body is the first row.
  *
  * Output: webview-ui/public/assets/pets/<speciesId>.png
@@ -22,8 +22,8 @@ import { DOMParser } from '@xmldom/xmldom';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PMD_DOWN_DIR = 0;
-const PMD_UP_DIR = 4;
-const PMD_RIGHT_DIR = 2; // E(2)=Right in PMDCollab 8-direction order (was incorrectly 6=W=Left)
+const PMD_UP_DIR = 2; // dir2=Up (back-facing) in 6-dir layout
+const PMD_RIGHT_DIR = 3; // dir3=Right (side profile) in 6-dir layout
 const PMD_DIRS_TO_EXTRACT = [PMD_DOWN_DIR, PMD_UP_DIR, PMD_RIGHT_DIR];
 const PMD_ROWS_PER_DIRECTION = 2; // body row + shadow row per direction
 
