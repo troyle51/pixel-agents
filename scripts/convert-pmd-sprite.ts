@@ -35,21 +35,20 @@ interface AnimInfo {
 
 function parseAnimData(xml: string): AnimInfo {
   const doc = new DOMParser().parseFromString(xml, 'text/xml');
-  const frameWidth = parseInt(doc.getElementsByTagName('FrameWidth')[0]?.textContent ?? '24', 10);
-  const frameHeight = parseInt(doc.getElementsByTagName('FrameHeight')[0]?.textContent ?? '24', 10);
-
   // Find Walk animation to get frame dimensions and count
   const anims = doc.getElementsByTagName('Anim');
+  let frameWidth = 24;
+  let frameHeight = 24;
   let frameCount = 4;
   for (let i = 0; i < anims.length; i++) {
     const nameEl = anims[i].getElementsByTagName('Name')[0];
     if (nameEl?.textContent === 'Walk') {
       frameWidth = parseInt(
-        anims[i].getElementsByTagName('FrameWidth')[0]?.textContent ?? String(frameWidth),
+        anims[i].getElementsByTagName('FrameWidth')[0]?.textContent ?? '24',
         10,
       );
       frameHeight = parseInt(
-        anims[i].getElementsByTagName('FrameHeight')[0]?.textContent ?? String(frameHeight),
+        anims[i].getElementsByTagName('FrameHeight')[0]?.textContent ?? '24',
         10,
       );
       frameCount = anims[i].getElementsByTagName('Duration').length;
