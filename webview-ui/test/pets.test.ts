@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+
 import { PNG } from 'pngjs';
+
 import { decodePetPng } from '../../shared/assets/pngDecoder.ts';
 
 test('decodePetPng: extracts correct frame count and dimensions', () => {
@@ -31,9 +33,9 @@ test('decodePetPng: handles single-frame square PNG gracefully', () => {
 });
 
 import {
-  setPetSprites,
-  getPetSprites,
   getLoadedPetSpecies,
+  getPetSprites,
+  setPetSprites,
 } from '../src/office/sprites/petSpriteData.ts';
 import { Direction } from '../src/office/types.ts';
 
@@ -69,7 +71,7 @@ test('getLoadedPetSpecies: returns list of loaded species IDs', () => {
 });
 
 import { createPet, updatePet } from '../src/office/engine/pets.ts';
-import { PetState } from '../src/office/types.ts';
+import { PetState, TileType } from '../src/office/types.ts';
 
 test('createPet: initializes pet at correct tile position', () => {
   const pet = createPet(1, 'pikachu', 3, 5);
@@ -88,10 +90,11 @@ test('updatePet IDLE→WALK: starts walking when wanderTimer expires', () => {
   pet.wanderTimer = 0; // expired
 
   const walkable = [{ col: 2, row: 2 }];
-  const tileMap = [
-    [1, 1, 1],
-    [1, 1, 1],
-    [1, 1, 1],
+  const F = TileType.FLOOR_1;
+  const tileMap: TileType[][] = [
+    [F, F, F],
+    [F, F, F],
+    [F, F, F],
   ];
   const blocked = new Set<string>();
 
@@ -108,7 +111,7 @@ test('updatePet WALK: advances frame timer and moves along path', () => {
   pet.frame = 0;
   pet.frameTimer = 0;
 
-  const tileMap = [[1, 1]];
+  const tileMap: TileType[][] = [[TileType.FLOOR_1, TileType.FLOOR_1]];
   updatePet(pet, 0.2, [], tileMap, new Set(), [], []);
 
   assert.ok(pet.moveProgress > 0 || pet.tileCol === 1, 'pet should have moved');
@@ -121,7 +124,7 @@ test('updatePet WALK→IDLE: transitions when path is complete', () => {
   pet.path = []; // path already done
   pet.moveProgress = 1;
 
-  updatePet(pet, 0.016, [], [[1]], new Set(), [], []);
+  updatePet(pet, 0.016, [], [[TileType.FLOOR_1]], new Set(), [], []);
 
   assert.equal(pet.state, PetState.IDLE, 'should transition to IDLE');
   assert.ok(pet.wanderTimer > 0, 'should set a new wanderTimer');

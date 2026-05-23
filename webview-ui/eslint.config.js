@@ -49,5 +49,12 @@ export default defineConfig([
       'pixel-agents/pixel-font': 'off',
     },
   },
+  {
+    // Test files use raw color literals as data fixtures, not UI styling
+    files: ['test/**'],
+    rules: {
+      'pixel-agents/no-inline-colors': 'off',
+    },
+  },
   eslintConfigPrettier,
 ]);
