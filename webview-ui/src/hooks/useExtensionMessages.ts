@@ -137,6 +137,10 @@ export function useExtensionMessages(
           // Default layout — snapshot whatever OfficeState built
           onLayoutLoaded?.(os.getLayout());
         }
+        const petSpecies = getLoadedPetSpecies();
+        if (petSpecies.length > 0) {
+          os.spawnPets(petSpecies);
+        }
         // Add buffered agents now that layout (and seats) are correct
         for (const p of pendingAgents) {
           os.addAgent(p.id, p.palette, p.hueShift, p.seatId, true, p.folderName);
@@ -501,11 +505,7 @@ export function useExtensionMessages(
             frames: { down: string[][][]; up: string[][][]; right: string[][][] };
           }>,
         );
-        const os = getOfficeState();
-        const species = getLoadedPetSpecies();
-        if (species.length > 0) {
-          os.spawnPets(species);
-        }
+        // Pets are spawned after layoutLoaded, which always arrives after petSpritesLoaded.
       } else if (msg.type === 'agentTeamInfo') {
         const id = msg.id as number;
         os.setTeamInfo(

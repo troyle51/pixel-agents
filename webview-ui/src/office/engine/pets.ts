@@ -8,6 +8,7 @@ import {
   PET_WANDER_PAUSE_MIN_SEC,
 } from '../../constants.js';
 import { findPath } from '../layout/tileMap.js';
+import { getPetSprites } from '../sprites/petSpriteData.js';
 import type {
   Character,
   FurnitureCatalogEntry,
@@ -141,7 +142,9 @@ export function updatePet(
       pet.frameTimer += dt;
       if (pet.frameTimer >= PET_WALK_FRAME_DURATION_SEC) {
         pet.frameTimer -= PET_WALK_FRAME_DURATION_SEC;
-        pet.frame = (pet.frame + 1) % 4;
+        const petFrames = getPetSprites(pet.speciesId)?.[pet.dir]?.length ?? 4;
+        const maxFrames = Math.min(4, petFrames);
+        pet.frame = (pet.frame + 1) % maxFrames;
       }
 
       if (pet.path.length === 0) {
