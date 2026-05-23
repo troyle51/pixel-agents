@@ -54,7 +54,7 @@ import type {
   SpriteData,
   TileType as TileTypeVal,
 } from '../types.js';
-import { CharacterState, TILE_SIZE, TileType } from '../types.js';
+import { CharacterState, MATRIX_EFFECT_DURATION, TILE_SIZE, TileType } from '../types.js';
 import { getWallInstances, hasWallSprites, wallColorToHex } from '../wallTiles.js';
 import { getCharacterSprite } from './characters.js';
 import { renderMatrixEffect } from './matrixEffect.js';
@@ -305,18 +305,36 @@ export function renderScene(
   // Pets
   if (pets) {
     for (const pet of pets) {
+      if (pet.matrixEffect === 'despawn' && pet.matrixEffectTimer >= MATRIX_EFFECT_DURATION) {
+        continue; // fully consumed — skip until cleared by rotation timer
+      }
       const spriteData = getPetSprite(pet.speciesId, pet.dir, pet.frame);
       if (!spriteData) continue;
-      const cached = getCachedSprite(spriteData, zoom);
-      const drawX = Math.round(offsetX + pet.x * zoom - cached.width / 2);
-      const drawY = Math.round(offsetY + pet.y * zoom - cached.height);
       const petZY = pet.y + TILE_SIZE / 2 + CHARACTER_Z_SORT_OFFSET;
-      drawables.push({
-        zY: petZY,
-        draw: (c) => {
-          c.drawImage(cached, drawX, drawY);
-        },
-      });
+
+      if (pet.matrixEffect) {
+        const cached = getCachedSprite(spriteData, zoom);
+        const drawX = Math.round(offsetX + pet.x * zoom - cached.width / 2);
+        const drawY = Math.round(offsetY + pet.y * zoom - cached.height);
+        const mPet = pet;
+        const mSprite = spriteData;
+        drawables.push({
+          zY: petZY,
+          draw: (c) => {
+            renderMatrixEffect(c, mPet, mSprite, drawX, drawY, zoom);
+          },
+        });
+      } else {
+        const cached = getCachedSprite(spriteData, zoom);
+        const drawX = Math.round(offsetX + pet.x * zoom - cached.width / 2);
+        const drawY = Math.round(offsetY + pet.y * zoom - cached.height);
+        drawables.push({
+          zY: petZY,
+          draw: (c) => {
+            c.drawImage(cached, drawX, drawY);
+          },
+        });
+      }
     }
   }
 
