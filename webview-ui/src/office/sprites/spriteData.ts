@@ -142,49 +142,53 @@ export function getCharacterSprites(paletteIndex: number, hueShift = 0): Charact
     const rt = char.right;
     const flip = flipSpriteHorizontal;
 
+    // Fallback to frame 0 for any missing frames (sparse arrays from tests or
+    // partial sprite sheets). Real PNG assets always have all 7+ frames.
+    const df = (arr: SpriteData[], i: number) => arr[i] ?? arr[0];
+
     sprites = {
       walk: {
-        [Dir.DOWN]: [d[0], d[1], d[2], d[1]],
-        [Dir.UP]: [u[0], u[1], u[2], u[1]],
-        [Dir.RIGHT]: [rt[0], rt[1], rt[2], rt[1]],
-        [Dir.LEFT]: [flip(rt[0]), flip(rt[1]), flip(rt[2]), flip(rt[1])],
+        [Dir.DOWN]: [d[0], df(d, 1), df(d, 2), df(d, 1)],
+        [Dir.UP]: [u[0], df(u, 1), df(u, 2), df(u, 1)],
+        [Dir.RIGHT]: [rt[0], df(rt, 1), df(rt, 2), df(rt, 1)],
+        [Dir.LEFT]: [flip(rt[0]), flip(df(rt, 1)), flip(df(rt, 2)), flip(df(rt, 1))],
       },
       typing: {
-        [Dir.DOWN]: [d[3], d[4]],
-        [Dir.UP]: [u[3], u[4]],
-        [Dir.RIGHT]: [rt[3], rt[4]],
-        [Dir.LEFT]: [flip(rt[3]), flip(rt[4])],
+        [Dir.DOWN]: [df(d, 3), df(d, 4)],
+        [Dir.UP]: [df(u, 3), df(u, 4)],
+        [Dir.RIGHT]: [df(rt, 3), df(rt, 4)],
+        [Dir.LEFT]: [flip(df(rt, 3)), flip(df(rt, 4))],
       },
       reading: {
-        [Dir.DOWN]: [d[5], d[6]],
-        [Dir.UP]: [u[5], u[6]],
-        [Dir.RIGHT]: [rt[5], rt[6]],
-        [Dir.LEFT]: [flip(rt[5]), flip(rt[6])],
+        [Dir.DOWN]: [df(d, 5), df(d, 6)],
+        [Dir.UP]: [df(u, 5), df(u, 6)],
+        [Dir.RIGHT]: [df(rt, 5), df(rt, 6)],
+        [Dir.LEFT]: [flip(df(rt, 5)), flip(df(rt, 6))],
       },
-      // Activity frames 7-10 from PNG (fallback to walk[1] if not decoded yet)
+      // Activity frames 7-10 from PNG (fallback to frame 0 if not decoded yet)
       pingPongWindup: {
-        [Dir.DOWN]: d[7] ?? d[1],
-        [Dir.UP]: u[7] ?? u[1],
-        [Dir.RIGHT]: rt[7] ?? rt[1],
-        [Dir.LEFT]: flip(rt[7] ?? rt[1]),
+        [Dir.DOWN]: df(d, 7),
+        [Dir.UP]: df(u, 7),
+        [Dir.RIGHT]: df(rt, 7),
+        [Dir.LEFT]: flip(df(rt, 7)),
       },
       pingPongHit: {
-        [Dir.DOWN]: d[8] ?? d[1],
-        [Dir.UP]: u[8] ?? u[1],
-        [Dir.RIGHT]: rt[8] ?? rt[1],
-        [Dir.LEFT]: flip(rt[8] ?? rt[1]),
+        [Dir.DOWN]: df(d, 8),
+        [Dir.UP]: df(u, 8),
+        [Dir.RIGHT]: df(rt, 8),
+        [Dir.LEFT]: flip(df(rt, 8)),
       },
       whiteboardPresent: {
-        [Dir.DOWN]: d[9] ?? d[1],
-        [Dir.UP]: u[9] ?? u[1],
-        [Dir.RIGHT]: rt[9] ?? rt[1],
-        [Dir.LEFT]: flip(rt[9] ?? rt[1]),
+        [Dir.DOWN]: df(d, 9),
+        [Dir.UP]: df(u, 9),
+        [Dir.RIGHT]: df(rt, 9),
+        [Dir.LEFT]: flip(df(rt, 9)),
       },
       whiteboardWatch: {
-        [Dir.DOWN]: d[10] ?? d[1],
-        [Dir.UP]: u[10] ?? u[1],
-        [Dir.RIGHT]: rt[10] ?? rt[1],
-        [Dir.LEFT]: flip(rt[10] ?? rt[1]),
+        [Dir.DOWN]: df(d, 10),
+        [Dir.UP]: df(u, 10),
+        [Dir.RIGHT]: df(rt, 10),
+        [Dir.LEFT]: flip(df(rt, 10)),
       },
     };
   } else {

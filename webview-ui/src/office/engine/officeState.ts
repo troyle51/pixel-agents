@@ -757,6 +757,13 @@ export class OfficeState {
     ch.outputTokens = outputTokens;
   }
 
+  setCharacterPalette(agentId: number, palette: number): void {
+    const ch = this.characters.get(agentId);
+    if (!ch) return;
+    ch.palette = palette;
+    ch.hueShift = 0;
+  }
+
   private tickPetRotation(dt: number): void {
     if (this.pendingPetRespawn !== null) {
       this.pendingPetRespawn -= dt;
