@@ -122,6 +122,22 @@ export const PET_WALK_FRAME_DURATION_SEC = 0.15;
 export const PET_APPROACH_AGENT_CHANCE = 0.3;
 export const PET_APPROACH_FURNITURE_CHANCE = 0.2;
 export const PET_APPROACH_RADIUS_TILES = 2;
+export const PET_REST_CHANCE = 0.15;
+export const PET_REST_MIN_SEC = 10.0;
+export const PET_REST_MAX_SEC = 30.0;
+export const PET_BOND_CHANCE = 0.1;
+export const PET_BOND_BREAK_CHANCE = 0.02;
+export const PET_EMOTE_FRAME_DURATION_SEC = 0.12;
+export const PET_HIT_HALF_WIDTH = 8;
+export const PET_HIT_HEIGHT = 16;
+export const PET_SCATTER_RADIUS_TILES = 4;
+
+// ── Pet Labels ────────────────────────────────────────────────
+export const PET_LABEL_FONT = '9px "FS Pixel Sans", monospace';
+export const PET_LABEL_COLOR = 'rgba(255,255,255,0.85)';
+export const PET_LABEL_BG = 'rgba(10,10,20,0.72)';
+export const PET_LABEL_PADDING_X = 4;
+export const PET_LABEL_PADDING_Y = 2;
 
 // ── Furniture Animation ─────────────────────────────────────
 export const FURNITURE_ANIM_INTERVAL_SEC = 0.2;

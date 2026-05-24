@@ -37,8 +37,17 @@ export type CharacterState = (typeof CharacterState)[keyof typeof CharacterState
 export const PetState = {
   IDLE: 'idle',
   WALK: 'walk',
+  EMOTING: 'emoting',
+  RESTING: 'resting',
+  BONDED: 'bonded',
 } as const;
 export type PetState = (typeof PetState)[keyof typeof PetState];
+
+export const PetAnimType = {
+  NOD: 'nod',
+  ATTACK: 'attack',
+} as const;
+export type PetAnimType = (typeof PetAnimType)[keyof typeof PetAnimType];
 
 export const Direction = {
   DOWN: 0,
@@ -257,4 +266,11 @@ export interface Pet {
   matrixEffect: 'spawn' | 'despawn' | null;
   matrixEffectTimer: number;
   matrixEffectSeeds: number[];
+  // Emote
+  emoteAnim: string | null;
+  emoteTimer: number;
+  // Resting
+  restTimer: number;
+  // Bonding
+  bondedAgentId: number | null;
 }
