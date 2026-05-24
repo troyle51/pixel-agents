@@ -403,6 +403,7 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
       } else if (message.type === 'setAgentPalette') {
         const agentId = message.agentId as number;
         const palette = message.palette as number;
+        if (!Number.isInteger(palette) || palette < 0) return;
         // Silently no-op if agent not found (may have closed between click and message)
         if (!this.agents.has(agentId)) return;
         // Update just this agent's entry in the persisted seat/palette record
@@ -412,7 +413,7 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
         const existing = seats[String(agentId)] ?? {};
         seats[String(agentId)] = { ...existing, palette, hueShift: 0 };
         void this.context.workspaceState.update(WORKSPACE_KEY_AGENT_SEATS, seats);
-        // Broadcast to all webview instances (cross-window sync)
+        // Notify the current webview to update the character's appearance
         this.webview?.postMessage({ type: 'agentPaletteChanged', agentId, palette });
       } else if (message.type === 'saveLayout') {
         this.layoutWatcher?.markOwnWrite();
