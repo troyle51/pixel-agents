@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import {
+  VARIANT_PICKER_GRID_MAX_H,
   VARIANT_PICKER_LABEL_COLOR,
   VARIANT_PICKER_PANEL_H,
   VARIANT_PICKER_PANEL_W,
@@ -98,7 +99,14 @@ export function VariantPicker({
         Choose Skin
       </div>
       <div
-        style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: VARIANT_PICKER_PANEL_W - 16 }}
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 4,
+          maxWidth: VARIANT_PICKER_PANEL_W - 16,
+          maxHeight: VARIANT_PICKER_GRID_MAX_H,
+          overflowY: 'auto',
+        }}
       >
         {thumbnails.map((src, i) => (
           <img

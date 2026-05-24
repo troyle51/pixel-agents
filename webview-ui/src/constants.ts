@@ -181,7 +181,8 @@ export const BOOKSHELF_BROWSE_MAX_SEC = 15;
 // ── Variant Picker ───────────────────────────────────────────
 export const VARIANT_PICKER_PIXEL_SIZE = 3;
 export const VARIANT_PICKER_PANEL_W = 180;
-export const VARIANT_PICKER_PANEL_H = 140;
+export const VARIANT_PICKER_GRID_MAX_H = 200; // ~2 rows visible, scrolls for more
+export const VARIANT_PICKER_PANEL_H = 250; // label + grid + padding (for viewport clamping)
 export const VARIANT_PICKER_THUMB_BG = '#2a2a3e';
 export const VARIANT_PICKER_LABEL_COLOR = '#888888';
 export const VARIANT_PICKER_SELECTED_BORDER = '#ffffff';
