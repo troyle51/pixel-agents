@@ -793,7 +793,7 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
         });
       } else if (message.type === 'setPinnedPets') {
         const pets = message.pets as string[];
-        if (!Array.isArray(pets)) return;
+        if (!Array.isArray(pets) || pets.length > 6) return;
         const config = readConfig();
         config.pinnedPets = pets.filter((p): p is string => typeof p === 'string');
         writeConfig(config);
