@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { toMajorMinor } from './changelogData.js';
 import { BottomToolbar } from './components/BottomToolbar.js';
@@ -16,6 +17,7 @@ import { useEditorKeyboard } from './hooks/useEditorKeyboard.js';
 import { useExtensionMessages } from './hooks/useExtensionMessages.js';
 import { OfficeCanvas } from './office/components/OfficeCanvas.js';
 import { ToolOverlay } from './office/components/ToolOverlay.js';
+import { VariantPicker } from './office/components/VariantPicker.js';
 import { EditorState } from './office/editor/editorState.js';
 import { EditorToolbar } from './office/editor/EditorToolbar.js';
 import { OfficeState } from './office/engine/officeState.js';
@@ -84,6 +86,19 @@ function App() {
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [alwaysShowOverlay, setAlwaysShowOverlay] = useState(false);
 
+  const [agentContextMenu, setAgentContextMenu] = useState<{
+    agentId: number;
+    screenX: number;
+    screenY: number;
+  } | null>(null);
+  const [variantPicker, setVariantPicker] = useState<{
+    agentId: number;
+    currentPalette: number;
+    screenX: number;
+    screenY: number;
+  } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
   const currentMajorMinor = toMajorMinor(extensionVersion);
 
   const handleWhatsNewDismiss = useCallback(() => {
@@ -99,6 +114,17 @@ function App() {
   useEffect(() => {
     setAlwaysShowOverlay(alwaysShowLabels);
   }, [alwaysShowLabels]);
+
+  useEffect(() => {
+    if (!agentContextMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setAgentContextMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [agentContextMenu]);
 
   const handleToggleDebugMode = useCallback(() => setIsDebugMode((prev) => !prev), []);
   const handleToggleAlwaysShowOverlay = useCallback(() => {
@@ -130,6 +156,19 @@ function App() {
 
   const handleCloseAgent = useCallback((id: number) => {
     vscode.postMessage({ type: 'closeAgent', id });
+  }, []);
+
+  const handleAgentContextMenu = useCallback(
+    (agentId: number, screenX: number, screenY: number) => {
+      setAgentContextMenu({ agentId, screenX, screenY });
+    },
+    [],
+  );
+
+  const handleVariantPick = useCallback((agentId: number, palette: number) => {
+    const os = getOfficeState();
+    os.setCharacterPalette(agentId, palette);
+    vscode.postMessage({ type: 'setAgentPalette', agentId, palette });
   }, []);
 
   const handleClick = useCallback((agentId: number) => {
@@ -173,6 +212,7 @@ function App() {
       <OfficeCanvas
         officeState={officeState}
         onClick={handleClick}
+        onAgentContextMenu={handleAgentContextMenu}
         isEditMode={editor.isEditMode}
         editorState={editorState}
         onEditorTileAction={editor.handleEditorTileAction}
@@ -366,6 +406,58 @@ function App() {
       {showMigrationNotice && (
         <MigrationNotice onDismiss={() => setMigrationNoticeDismissed(true)} />
       )}
+
+      {agentContextMenu !== null &&
+        createPortal(
+          <div
+            ref={contextMenuRef}
+            style={{
+              position: 'fixed',
+              left: agentContextMenu.screenX,
+              top: agentContextMenu.screenY,
+              zIndex: 9998,
+              minWidth: 148,
+              fontSize: 13,
+            }}
+            className="pixel-panel"
+          >
+            <div
+              style={{
+                padding: '6px 12px',
+                cursor: 'pointer',
+                color: 'var(--color-accent)',
+                userSelect: 'none',
+              }}
+              onClick={() => {
+                const os = getOfficeState();
+                const ch = os.characters.get(agentContextMenu.agentId);
+                setVariantPicker({
+                  agentId: agentContextMenu.agentId,
+                  currentPalette: ch?.palette ?? 0,
+                  screenX: agentContextMenu.screenX,
+                  screenY: agentContextMenu.screenY + 32,
+                });
+                setAgentContextMenu(null);
+              }}
+            >
+              Customize Agent
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {variantPicker !== null &&
+        createPortal(
+          <VariantPicker
+            agentId={variantPicker.agentId}
+            currentPalette={variantPicker.currentPalette}
+            screenX={variantPicker.screenX}
+            screenY={variantPicker.screenY}
+            onPick={handleVariantPick}
+            onClose={() => setVariantPicker(null)}
+          />,
+          document.body,
+        )}
     </div>
   );
 }
