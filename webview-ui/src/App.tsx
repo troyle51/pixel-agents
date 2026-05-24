@@ -425,7 +425,7 @@ function App() {
               style={{
                 padding: '6px 12px',
                 cursor: 'pointer',
-                color: 'var(--color-accent)',
+                color: 'var(--color-text)',
                 userSelect: 'none',
               }}
               onClick={() => {
