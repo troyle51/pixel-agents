@@ -210,6 +210,10 @@ export function useExtensionMessages(
         os.removeAllSubagents(id);
         setSubagentCharacters((prev) => prev.filter((s) => s.parentAgentId !== id));
         os.removeAgent(id);
+      } else if (msg.type === 'agentPaletteChanged') {
+        const agentId = msg.agentId as number;
+        const palette = msg.palette as number;
+        os.setCharacterPalette(agentId, palette);
       } else if (msg.type === 'existingAgents') {
         const incoming = msg.agents as number[];
         const meta = (msg.agentMeta || {}) as Record<
