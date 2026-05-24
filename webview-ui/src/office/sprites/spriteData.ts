@@ -148,10 +148,10 @@ export function getCharacterSprites(paletteIndex: number, hueShift = 0): Charact
 
     sprites = {
       walk: {
-        [Dir.DOWN]: [d[0], df(d, 1), df(d, 2), df(d, 1)],
-        [Dir.UP]: [u[0], df(u, 1), df(u, 2), df(u, 1)],
-        [Dir.RIGHT]: [rt[0], df(rt, 1), df(rt, 2), df(rt, 1)],
-        [Dir.LEFT]: [flip(rt[0]), flip(df(rt, 1)), flip(df(rt, 2)), flip(df(rt, 1))],
+        [Dir.DOWN]: [df(d, 0), df(d, 1), df(d, 2), df(d, 1)],
+        [Dir.UP]: [df(u, 0), df(u, 1), df(u, 2), df(u, 1)],
+        [Dir.RIGHT]: [df(rt, 0), df(rt, 1), df(rt, 2), df(rt, 1)],
+        [Dir.LEFT]: [flip(df(rt, 0)), flip(df(rt, 1)), flip(df(rt, 2)), flip(df(rt, 1))],
       },
       typing: {
         [Dir.DOWN]: [df(d, 3), df(d, 4)],

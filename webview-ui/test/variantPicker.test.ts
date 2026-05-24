@@ -19,6 +19,7 @@ const makeLoadedChar = (color: string) => ({
 });
 
 test('getLoadedCharacterCount returns loaded variant count after setCharacterTemplates', () => {
+  setCharacterTemplates([]);
   setCharacterTemplates([
     makeLoadedChar('#ff0000'),
     makeLoadedChar('#00ff00'),
@@ -28,6 +29,7 @@ test('getLoadedCharacterCount returns loaded variant count after setCharacterTem
 });
 
 test('getCharacterSprites returns different walk sprites for different palette indices', () => {
+  setCharacterTemplates([]);
   setCharacterTemplates([makeLoadedChar('#ff0000'), makeLoadedChar('#00ff00')]);
   const s0 = getCharacterSprites(0, 0);
   const s1 = getCharacterSprites(1, 0);
