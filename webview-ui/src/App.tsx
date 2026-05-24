@@ -22,6 +22,7 @@ import { EditorState } from './office/editor/editorState.js';
 import { EditorToolbar } from './office/editor/EditorToolbar.js';
 import { OfficeState } from './office/engine/officeState.js';
 import { isRotatable } from './office/layout/furnitureCatalog.js';
+import { getLoadedPetSpecies } from './office/sprites/petSpriteData.js';
 import { EditTool } from './office/types.js';
 import { isBrowserRuntime } from './runtime.js';
 import { vscode } from './vscodeApi.js';
@@ -73,6 +74,8 @@ function App() {
     hooksEnabled,
     setHooksEnabled,
     hooksInfoShown,
+    pinnedPets,
+    handleSetPinnedPets,
   } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty);
 
   // Show migration notice once layout reset is detected
@@ -401,6 +404,9 @@ function App() {
           setHooksEnabled(newVal);
           vscode.postMessage({ type: 'setHooksEnabled', enabled: newVal });
         }}
+        pinnedPets={pinnedPets}
+        availablePets={getLoadedPetSpecies()}
+        onSetPinnedPets={handleSetPinnedPets}
       />
 
       {showMigrationNotice && (

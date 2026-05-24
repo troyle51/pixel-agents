@@ -6,10 +6,12 @@ import { CONFIG_FILE_NAME, LAYOUT_FILE_DIR } from './constants.js';
 
 interface PixelAgentsConfig {
   externalAssetDirectories: string[];
+  pinnedPets: string[];
 }
 
 const DEFAULT_CONFIG: PixelAgentsConfig = {
   externalAssetDirectories: [],
+  pinnedPets: ['squirtle', 'pikachu', 'eevee'],
 };
 
 function getConfigFilePath(): string {
@@ -26,6 +28,9 @@ export function readConfig(): PixelAgentsConfig {
       externalAssetDirectories: Array.isArray(parsed.externalAssetDirectories)
         ? parsed.externalAssetDirectories.filter((d): d is string => typeof d === 'string')
         : [],
+      pinnedPets: Array.isArray(parsed.pinnedPets)
+        ? parsed.pinnedPets.filter((p): p is string => typeof p === 'string')
+        : DEFAULT_CONFIG.pinnedPets,
     };
   } catch (err) {
     console.error('[Pixel Agents] Failed to read config file:', err);

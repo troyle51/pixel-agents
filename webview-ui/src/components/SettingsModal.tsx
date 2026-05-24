@@ -19,6 +19,9 @@ interface SettingsModalProps {
   onToggleWatchAllSessions: () => void;
   hooksEnabled: boolean;
   onToggleHooksEnabled: () => void;
+  pinnedPets: string[];
+  availablePets: string[];
+  onSetPinnedPets: (pets: string[]) => void;
 }
 
 export function SettingsModal({
@@ -33,6 +36,9 @@ export function SettingsModal({
   onToggleWatchAllSessions,
   hooksEnabled,
   onToggleHooksEnabled,
+  pinnedPets,
+  availablePets,
+  onSetPinnedPets,
 }: SettingsModalProps) {
   const [soundLocal, setSoundLocal] = useState(isSoundEnabled);
 
@@ -88,6 +94,66 @@ export function SettingsModal({
           </Button>
         </div>
       ))}
+      {/* Pinned Pets */}
+      <div
+        style={{
+          padding: '8px 10px 4px',
+          fontSize: 10,
+          color: 'var(--color-text-muted)',
+          textTransform: 'uppercase',
+          letterSpacing: 1,
+        }}
+      >
+        Pinned Pets
+      </div>
+      {pinnedPets.map((species) => (
+        <div key={species} className="flex items-center justify-between py-4 px-10 gap-8">
+          <span className="text-xs text-text">
+            {species.charAt(0).toUpperCase() + species.slice(1)}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onSetPinnedPets(pinnedPets.filter((p) => p !== species))}
+            className="shrink-0"
+          >
+            x
+          </Button>
+        </div>
+      ))}
+      {pinnedPets.length < 6 && (
+        <div style={{ padding: '2px 10px 8px' }}>
+          <select
+            style={{
+              background: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-border)',
+              padding: '3px 6px',
+              fontSize: 11,
+              width: '100%',
+            }}
+            defaultValue=""
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val && !pinnedPets.includes(val)) {
+                onSetPinnedPets([...pinnedPets, val]);
+              }
+              e.target.value = '';
+            }}
+          >
+            <option value="" disabled>
+              Add a pet…
+            </option>
+            {availablePets
+              .filter((p) => !pinnedPets.includes(p))
+              .map((p) => (
+                <option key={p} value={p}>
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </option>
+              ))}
+          </select>
+        </div>
+      )}
       <Checkbox
         label="Sound Notifications"
         checked={soundLocal}

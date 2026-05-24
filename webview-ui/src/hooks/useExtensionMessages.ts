@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { playDoneSound, playPermissionSound, setSoundEnabled } from '../notificationSound.js';
 import type { OfficeState } from '../office/engine/officeState.js';
@@ -67,6 +67,8 @@ interface ExtensionMessageState {
   hooksEnabled: boolean;
   setHooksEnabled: (v: boolean) => void;
   hooksInfoShown: boolean;
+  pinnedPets: string[];
+  handleSetPinnedPets: (pets: string[]) => void;
 }
 
 function saveAgentSeats(os: OfficeState): void {
@@ -104,6 +106,11 @@ export function useExtensionMessages(
   const [alwaysShowLabels, setAlwaysShowLabels] = useState(false);
   const [hooksEnabled, setHooksEnabled] = useState(true);
   const [hooksInfoShown, setHooksInfoShown] = useState(true);
+  const [pinnedPets, setPinnedPets] = useState<string[]>(['squirtle', 'pikachu', 'eevee']);
+
+  const handleSetPinnedPets = useCallback((pets: string[]) => {
+    vscode.postMessage({ type: 'setPinnedPets', pets });
+  }, []);
 
   // Track whether initial layout has been loaded (ref to avoid re-render)
   const layoutReadyRef = useRef(false);
@@ -481,6 +488,11 @@ export function useExtensionMessages(
         if (Array.isArray(msg.externalAssetDirectories)) {
           setExternalAssetDirectories(msg.externalAssetDirectories as string[]);
         }
+        if (Array.isArray(msg.pinnedPets)) {
+          const pets = msg.pinnedPets as string[];
+          setPinnedPets(pets);
+          os.setPinnedPets(pets);
+        }
         if (typeof msg.lastSeenVersion === 'string') {
           setLastSeenVersion(msg.lastSeenVersion as string);
         }
@@ -490,6 +502,12 @@ export function useExtensionMessages(
       } else if (msg.type === 'externalAssetDirectoriesUpdated') {
         if (Array.isArray(msg.dirs)) {
           setExternalAssetDirectories(msg.dirs as string[]);
+        }
+      } else if (msg.type === 'pinnedPetsUpdated') {
+        if (Array.isArray(msg.pets)) {
+          const pets = msg.pets as string[];
+          setPinnedPets(pets);
+          os.setPinnedPets(pets);
         }
       } else if (msg.type === 'furnitureAssetsLoaded') {
         try {
@@ -551,5 +569,7 @@ export function useExtensionMessages(
     hooksEnabled,
     setHooksEnabled,
     hooksInfoShown,
+    pinnedPets,
+    handleSetPinnedPets,
   };
 }

@@ -10,7 +10,6 @@ import {
   HUE_SHIFT_RANGE_DEG,
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
-  PET_FIXED_SPECIES,
   PET_HIT_HALF_WIDTH,
   PET_HIT_HEIGHT,
   PET_RANDOM_COUNT,
@@ -68,6 +67,7 @@ export class OfficeState {
   /** Reverse lookup: sub-agent character ID → parent info */
   subagentMeta: Map<number, { parentAgentId: number; parentToolId: string }> = new Map();
   private nextSubagentId = -1;
+  private pinnedPets: string[] = ['squirtle', 'pikachu', 'eevee'];
   readonly activityManager = new ActivityManager();
 
   constructor(layout?: OfficeLayout) {
@@ -248,12 +248,16 @@ export class OfficeState {
     return null;
   }
 
+  setPinnedPets(pets: string[]): void {
+    this.pinnedPets = pets;
+  }
+
   spawnPets(loadedSpecies: string[]): void {
     if (loadedSpecies.length === 0 || this.walkableTiles.length === 0) return;
     this.pets.clear();
     this.nextPetId = 1;
 
-    const fixed = PET_FIXED_SPECIES.filter((id) => getPetSprites(id));
+    const fixed = this.pinnedPets.filter((id) => getPetSprites(id));
     const remaining = [...loadedSpecies].filter((id) => !fixed.includes(id));
     remaining.sort(() => Math.random() - 0.5);
     const toSpawn = [...fixed, ...remaining.slice(0, PET_RANDOM_COUNT)];

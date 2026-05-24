@@ -535,6 +535,7 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
           hooksEnabled,
           hooksInfoShown,
           externalAssetDirectories: config.externalAssetDirectories,
+          pinnedPets: config.pinnedPets,
         });
 
         // Send workspace folders to webview (only when multi-root)
@@ -790,6 +791,13 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
           type: 'externalAssetDirectoriesUpdated',
           dirs: cfg.externalAssetDirectories,
         });
+      } else if (message.type === 'setPinnedPets') {
+        const pets = message.pets as string[];
+        if (!Array.isArray(pets)) return;
+        const config = readConfig();
+        config.pinnedPets = pets.filter((p): p is string => typeof p === 'string');
+        writeConfig(config);
+        this.webview?.postMessage({ type: 'pinnedPetsUpdated', pets: config.pinnedPets });
       } else if (message.type === 'importLayout') {
         const uris = await vscode.window.showOpenDialog({
           filters: { 'JSON Files': ['json'] },
