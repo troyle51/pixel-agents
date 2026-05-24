@@ -11,6 +11,8 @@ import {
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
   PET_FIXED_SPECIES,
+  PET_HIT_HALF_WIDTH,
+  PET_HIT_HEIGHT,
   PET_RANDOM_COUNT,
   PET_ROTATION_INTERVAL_SEC,
   WAITING_BUBBLE_DURATION_SEC,
@@ -59,6 +61,7 @@ export class OfficeState {
   selectedAgentId: number | null = null;
   cameraFollowId: number | null = null;
   hoveredAgentId: number | null = null;
+  hoveredPetId: number | null = null;
   hoveredTile: { col: number; row: number } | null = null;
   /** Maps "parentId:toolId" → sub-agent character ID (negative) */
   subagentIdMap: Map<string, number> = new Map();
@@ -902,6 +905,21 @@ export class OfficeState {
       const bottom = anchorY;
       if (worldX >= left && worldX <= right && worldY >= top && worldY <= bottom) {
         return ch.id;
+      }
+    }
+    return null;
+  }
+
+  getPetAt(worldX: number, worldY: number): number | null {
+    for (const pet of this.pets.values()) {
+      if (pet.matrixEffect === 'despawn') continue;
+      if (
+        worldX >= pet.x - PET_HIT_HALF_WIDTH &&
+        worldX <= pet.x + PET_HIT_HALF_WIDTH &&
+        worldY >= pet.y - PET_HIT_HEIGHT &&
+        worldY <= pet.y
+      ) {
+        return pet.id;
       }
     }
     return null;

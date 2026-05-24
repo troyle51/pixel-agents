@@ -249,6 +249,7 @@ export function OfficeCanvas({
         const selectionRender: SelectionRenderState = {
           selectedAgentId: officeState.selectedAgentId,
           hoveredAgentId: officeState.hoveredAgentId,
+          hoveredPetId: officeState.hoveredPetId,
           hoveredTile: officeState.hoveredTile,
           seats: officeState.seats,
           characters: officeState.characters,
@@ -484,6 +485,7 @@ export function OfficeCanvas({
         canvas.style.cursor = cursor;
       }
       officeState.hoveredAgentId = hitId;
+      officeState.hoveredPetId = pos ? officeState.getPetAt(pos.worldX, pos.worldY) : null;
     },
     [
       officeState,

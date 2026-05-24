@@ -24,6 +24,12 @@ import {
   GRID_LINE_COLOR,
   HOVERED_OUTLINE_ALPHA,
   OUTLINE_Z_SORT_OFFSET,
+  PET_HIT_HEIGHT,
+  PET_LABEL_BG,
+  PET_LABEL_COLOR,
+  PET_LABEL_FONT,
+  PET_LABEL_PADDING_X,
+  PET_LABEL_PADDING_Y,
   PING_PONG_BALL_COLOR,
   ROTATE_BUTTON_BG,
   SEAT_AVAILABLE_COLOR,
@@ -214,6 +220,7 @@ export function renderScene(
   hoveredAgentId: number | null,
   activitySessions?: Map<string, ActivitySession>,
   pets?: Pet[],
+  hoveredPetId?: number | null,
 ): void {
   const drawables: ZDrawable[] = [];
 
@@ -348,6 +355,26 @@ export function renderScene(
   if (activitySessions) {
     renderPingPongBalls(ctx, activitySessions, offsetX, offsetY, zoom);
     renderActivityOverlays(ctx, activitySessions, offsetX, offsetY, zoom);
+  }
+
+  // Pet hover label (rendered after z-sort, always on top)
+  if (pets && hoveredPetId != null) {
+    const hovPet = pets.find((p) => p.id === hoveredPetId);
+    if (hovPet && hovPet.matrixEffect !== 'despawn') {
+      const label = hovPet.speciesId.charAt(0).toUpperCase() + hovPet.speciesId.slice(1);
+      ctx.font = PET_LABEL_FONT;
+      const textW = ctx.measureText(label).width;
+      const boxW = textW + PET_LABEL_PADDING_X * 2;
+      const boxH = 9 + PET_LABEL_PADDING_Y * 2;
+      const bx = Math.round(offsetX + hovPet.x * zoom - boxW / 2);
+      const by = Math.round(offsetY + hovPet.y * zoom - PET_HIT_HEIGHT * zoom - 6);
+      ctx.fillStyle = PET_LABEL_BG;
+      ctx.fillRect(bx, by - boxH, boxW, boxH);
+      ctx.fillStyle = PET_LABEL_COLOR;
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(label, bx + PET_LABEL_PADDING_X, by - PET_LABEL_PADDING_Y);
+      ctx.textBaseline = 'alphabetic';
+    }
   }
 }
 
@@ -701,6 +728,7 @@ export interface EditorRenderState {
 export interface SelectionRenderState {
   selectedAgentId: number | null;
   hoveredAgentId: number | null;
+  hoveredPetId: number | null;
   hoveredTile: { col: number; row: number } | null;
   seats: Map<string, Seat>;
   characters: Map<number, Character>;
@@ -772,6 +800,7 @@ export function renderFrame(
     hoveredId,
     activitySessions,
     pets,
+    selection?.hoveredPetId ?? null,
   );
 
   // Speech bubbles (always on top of characters)
