@@ -31,7 +31,7 @@ function renderSpriteToDataUrl(sprite: SpriteData, pixelSize: number): string {
   if (!ctx) return '';
   for (let row = 0; row < h; row++) {
     for (let col = 0; col < w; col++) {
-      const color = sprite[row][col];
+      const color = sprite[row]?.[col];
       if (!color) continue;
       ctx.fillStyle = color;
       ctx.fillRect(col * pixelSize, row * pixelSize, pixelSize, pixelSize);
@@ -71,8 +71,8 @@ export function VariantPicker({
   }
 
   // Clamp to viewport so panel doesn't clip off-screen
-  const left = Math.min(screenX, window.innerWidth - VARIANT_PICKER_PANEL_W - 8);
-  const top = Math.min(screenY, window.innerHeight - VARIANT_PICKER_PANEL_H - 8);
+  const left = Math.max(0, Math.min(screenX, window.innerWidth - VARIANT_PICKER_PANEL_W - 8));
+  const top = Math.max(0, Math.min(screenY, window.innerHeight - VARIANT_PICKER_PANEL_H - 8));
 
   return (
     <div
