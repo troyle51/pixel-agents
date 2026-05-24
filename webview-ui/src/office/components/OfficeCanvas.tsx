@@ -27,6 +27,7 @@ import { EditTool, TILE_SIZE } from '../types.js';
 interface OfficeCanvasProps {
   officeState: OfficeState;
   onClick: (agentId: number) => void;
+  onAgentContextMenu: (agentId: number, screenX: number, screenY: number) => void;
   isEditMode: boolean;
   editorState: EditorState;
   onEditorTileAction: (col: number, row: number) => void;
@@ -44,6 +45,7 @@ interface OfficeCanvasProps {
 export function OfficeCanvas({
   officeState,
   onClick,
+  onAgentContextMenu,
   isEditMode,
   editorState,
   onEditorTileAction,
@@ -749,7 +751,16 @@ export function OfficeCanvas({
     (e: React.MouseEvent) => {
       e.preventDefault();
       if (isEditMode) return;
-      // Right-click to walk selected agent to tile
+      // If right-clicking on a non-sub-agent character, show context menu
+      const pos = screenToWorld(e.clientX, e.clientY);
+      if (pos) {
+        const hitId = officeState.getCharacterAt(pos.worldX, pos.worldY);
+        if (hitId !== null && !officeState.characters.get(hitId)?.isSubagent) {
+          onAgentContextMenu(hitId, e.clientX, e.clientY);
+          return;
+        }
+      }
+      // No character hit — existing walk-to-tile behavior
       if (officeState.selectedAgentId !== null) {
         const tile = screenToTile(e.clientX, e.clientY);
         if (tile) {
@@ -757,7 +768,7 @@ export function OfficeCanvas({
         }
       }
     },
-    [isEditMode, officeState, screenToTile],
+    [isEditMode, officeState, screenToTile, screenToWorld, onAgentContextMenu],
   );
 
   // Wheel: Ctrl+wheel to zoom, plain wheel/trackpad to pan
