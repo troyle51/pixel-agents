@@ -59,7 +59,6 @@ export function createPet(id: number, speciesId: string, tileCol: number, tileRo
     matrixEffectTimer: 0,
     matrixEffectSeeds: [],
     emoteAnim: null,
-    emoteTimer: 0,
     restTimer: 0,
     bondedAgentId: null,
   };

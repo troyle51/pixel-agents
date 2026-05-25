@@ -268,7 +268,6 @@ export interface Pet {
   matrixEffectSeeds: number[];
   // Emote
   emoteAnim: string | null;
-  emoteTimer: number;
   // Resting
   restTimer: number;
   // Bonding

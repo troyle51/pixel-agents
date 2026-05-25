@@ -954,12 +954,11 @@ export class OfficeState {
     const available = getLoadedPetAnims(pet.speciesId);
     const anim =
       (preferredAnim && available.includes(preferredAnim) ? preferredAnim : null) ??
-      available[Math.floor(Math.random() * available.length)] ??
-      null;
+      available[Math.floor(Math.random() * available.length)] ?? // undefined if empty array
+      null; // coerce undefined → null for the guard below
     if (!anim) return;
     pet.state = PetState.EMOTING;
     pet.emoteAnim = anim;
-    pet.emoteTimer = 0;
     pet.frame = 0;
     pet.frameTimer = 0;
     pet.path = [];

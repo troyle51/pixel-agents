@@ -25,7 +25,6 @@ function makePet(id: number, x: number, y: number): Pet {
     matrixEffectTimer: 0,
     matrixEffectSeeds: [],
     emoteAnim: null as null | string,
-    emoteTimer: 0,
     restTimer: 0,
     bondedAgentId: null as null | number,
   };
@@ -141,6 +140,8 @@ test('triggerPetEmote sets EMOTING state on target pet', () => {
   assert.equal(pet.state, PetState.EMOTING);
   assert.equal(pet.emoteAnim, 'nod');
   assert.equal(pet.frame, 0);
+  // Restore module state so subsequent tests start clean
+  setPetAnimSprites([]);
 });
 
 test('triggerPetEmote is a no-op for unknown petId', () => {
