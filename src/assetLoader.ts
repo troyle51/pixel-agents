@@ -597,8 +597,9 @@ export async function loadPetAnimSprites(assetsRoot: string): Promise<LoadedPetA
     if (!match) continue;
     const speciesId = match[1].toLowerCase();
     const animName = match[2].toLowerCase();
-    // Only load known anim types
-    if (animName !== 'nod' && animName !== 'attack') continue;
+    // Verify the speciesId corresponds to a real species file (prevents false parses like nidoran-f → speciesId='nidoran')
+    const speciesFilePath = path.join(petsDir, `${speciesId}.png`);
+    if (!fs.existsSync(speciesFilePath)) continue;
     const filePath = path.join(petsDir, entry);
     const resolvedFile = path.resolve(filePath);
     const resolvedDir = path.resolve(petsDir);

@@ -52,6 +52,7 @@ export interface PetAnimSpriteInput {
 }
 
 export function setPetAnimSprites(data: PetAnimSpriteInput[]): void {
+  petAnimSprites.clear();
   for (const { speciesId, animName, frames } of data) {
     let byAnim = petAnimSprites.get(speciesId);
     if (!byAnim) {
