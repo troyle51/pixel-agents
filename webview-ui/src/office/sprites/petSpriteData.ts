@@ -21,8 +21,8 @@ export function setPetSprites(data: PetSpriteInput[]): void {
     petSprites.set(speciesId, {
       [Direction.DOWN]: frames.down,
       [Direction.UP]: frames.up,
-      [Direction.LEFT]: frames.right,
-      [Direction.RIGHT]: frames.right.map(flipHorizontal),
+      [Direction.LEFT]: frames.right.map(flipHorizontal),
+      [Direction.RIGHT]: frames.right,
     });
   }
 }

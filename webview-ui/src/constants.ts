@@ -132,11 +132,11 @@ export const PET_HIT_HEIGHT = 16;
 export const PET_SCATTER_RADIUS_TILES = 4;
 
 // ── Pet Labels ────────────────────────────────────────────────
-export const PET_LABEL_FONT = '9px "FS Pixel Sans", monospace';
-export const PET_LABEL_COLOR = 'rgba(255,255,255,0.85)';
-export const PET_LABEL_BG = 'rgba(10,10,20,0.72)';
-export const PET_LABEL_PADDING_X = 4;
-export const PET_LABEL_PADDING_Y = 2;
+export const PET_LABEL_FONT_SIZE_PX = 6;
+export const PET_LABEL_COLOR = 'rgba(255,255,255,0.95)';
+export const PET_LABEL_BG = 'rgba(10,10,20,0.85)';
+export const PET_LABEL_PADDING_X = 6;
+export const PET_LABEL_PADDING_Y = 3;
 
 // ── Furniture Animation ─────────────────────────────────────
 export const FURNITURE_ANIM_INTERVAL_SEC = 0.2;

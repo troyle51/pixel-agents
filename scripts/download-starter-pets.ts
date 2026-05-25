@@ -271,7 +271,6 @@ const FAN_FAVORITES: Array<{ num: string; name: string }> = [
 
 const SPECIES = [...GEN1, ...FAN_FAVORITES];
 
-const PMD_DIRS_TO_EXTRACT = [0, 2, 3]; // Down, Up, Right — dir0=Down, dir2=Up, dir3=Right (6-dir layout)
 const PMD_ROWS_PER_DIRECTION = 2;
 const EMOTE_ANIMS = ['Nod', 'Attack'] as const;
 
@@ -305,6 +304,30 @@ function parseAnimEntry(
   return null;
 }
 
+// Returns [srcRowPair, flipH] for each of the 3 output rows [down, up, right].
+// 8-dir sprites store S(0),SW(1),W(2),NW(3),N(4),NE(5),E(6),SE(7) → use rows 0,4,6.
+// 4-dir sprites store S(0),E(1),N(2),W(3) → use rows 0,2,1 (no flip needed).
+// 1-dir sprites: replicate the single row for all directions.
+function getDirMap(dirCount: number): Array<[number, boolean]> {
+  if (dirCount >= 8)
+    return [
+      [0, false],
+      [4, false],
+      [6, false],
+    ];
+  if (dirCount >= 4)
+    return [
+      [0, false],
+      [2, false],
+      [1, false],
+    ];
+  return [
+    [0, false],
+    [0, false],
+    [0, false],
+  ];
+}
+
 function extractDirectionRows(
   srcPng: ReturnType<typeof PNG.sync.read>,
   frameWidth: number,
@@ -317,12 +340,14 @@ function extractDirectionRows(
   const outPng = new PNG({ width: outW, height: outH });
   outPng.data.fill(0);
   const bodyRows = Math.min(frameSize, frameHeight);
-  PMD_DIRS_TO_EXTRACT.forEach((pmdDir, dstRow) => {
-    const srcYStart = pmdDir * PMD_ROWS_PER_DIRECTION * frameHeight;
+  const dirCount = Math.round(srcPng.height / (PMD_ROWS_PER_DIRECTION * frameHeight));
+  const dirMap = getDirMap(dirCount);
+  dirMap.forEach(([srcRowPair, flipH], dstRow) => {
+    const srcYStart = srcRowPair * PMD_ROWS_PER_DIRECTION * frameHeight;
     for (let f = 0; f < frameCount; f++) {
       for (let y = 0; y < bodyRows; y++) {
         for (let x = 0; x < frameSize; x++) {
-          const srcX = f * frameWidth + x;
+          const srcX = flipH ? f * frameWidth + (frameWidth - 1 - x) : f * frameWidth + x;
           const srcY = srcYStart + y;
           if (srcY >= srcPng.height || srcX >= srcPng.width) continue;
           const si = (srcY * srcPng.width + srcX) * 4;
