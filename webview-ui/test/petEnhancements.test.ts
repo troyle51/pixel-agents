@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { OfficeState } from '../src/office/engine/officeState.js';
+import { updatePet } from '../src/office/engine/pets.js';
 import { Direction, PetState } from '../src/office/types.js';
 
 function makePet(id: number, x: number, y: number) {
@@ -98,4 +99,31 @@ test('setAgentActive scatters nearby pets — resets wanderTimer and clears path
   assert.equal(os.pets.get(10)!.wanderTimer, 0); // near pet scattered
   assert.deepEqual(os.pets.get(10)!.path, []); // path cleared
   assert.equal(os.pets.get(11)!.wanderTimer, 5); // far pet unchanged
+});
+
+test('updatePet RESTING counts down restTimer and returns to IDLE', () => {
+  const pet = makePet(20, 100, 100);
+  pet.state = PetState.RESTING;
+  pet.restTimer = 0.05;
+  updatePet(pet, 0.1, [], [], new Set(), [], []);
+  assert.equal(pet.state, PetState.IDLE);
+});
+
+test('updatePet RESTING stays RESTING if timer not expired', () => {
+  const pet = makePet(21, 100, 100);
+  pet.state = PetState.RESTING;
+  pet.restTimer = 5.0;
+  updatePet(pet, 0.1, [], [], new Set(), [], []);
+  assert.equal(pet.state, PetState.RESTING);
+  assert.ok(pet.restTimer < 5.0); // timer decremented
+});
+
+test('updatePet BONDED breaks bond when agent disappears', () => {
+  const pet = makePet(22, 100, 100);
+  pet.state = PetState.BONDED;
+  pet.bondedAgentId = 99; // agent 99 does not exist
+  pet.wanderTimer = 0;
+  updatePet(pet, 0.1, [], [], new Set(), [], []); // empty characters array
+  assert.equal(pet.bondedAgentId, null);
+  assert.equal(pet.state, PetState.IDLE);
 });

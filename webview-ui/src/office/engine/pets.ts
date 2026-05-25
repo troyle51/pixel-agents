@@ -2,6 +2,11 @@ import {
   PET_APPROACH_AGENT_CHANCE,
   PET_APPROACH_FURNITURE_CHANCE,
   PET_APPROACH_RADIUS_TILES,
+  PET_BOND_BREAK_CHANCE,
+  PET_BOND_CHANCE,
+  PET_REST_CHANCE,
+  PET_REST_MAX_SEC,
+  PET_REST_MIN_SEC,
   PET_WALK_FRAME_DURATION_SEC,
   PET_WALK_SPEED_PX_PER_SEC,
   PET_WANDER_PAUSE_MAX_SEC,
@@ -85,6 +90,49 @@ export function updatePet(
       pet.wanderTimer -= dt;
       if (pet.wanderTimer > 0) break;
 
+      // Chance to bond with a nearby idle character
+      if (Math.random() < PET_BOND_CHANCE && characters.length > 0) {
+        const idleChars = characters.filter((c) => !c.isActive && !c.isSubagent);
+        const inRadius = idleChars.filter(
+          (c) =>
+            Math.abs(c.tileCol - pet.tileCol) + Math.abs(c.tileRow - pet.tileRow) <=
+            PET_APPROACH_RADIUS_TILES * 2,
+        );
+        if (inRadius.length > 0) {
+          const bondTarget = inRadius[Math.floor(Math.random() * inRadius.length)];
+          pet.bondedAgentId = bondTarget.id;
+          pet.state = PetState.BONDED;
+          pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
+          break;
+        }
+      }
+
+      // Chance to rest near furniture
+      if (Math.random() < PET_REST_CHANCE && furniture.length > 0) {
+        const f = furniture[Math.floor(Math.random() * furniture.length)];
+        const nearby = nearbyWalkable(f.col, f.row, 1, walkableTiles);
+        if (nearby.length > 0) {
+          const restTile = nearby[Math.floor(Math.random() * nearby.length)];
+          const path = findPath(
+            pet.tileCol,
+            pet.tileRow,
+            restTile.col,
+            restTile.row,
+            tileMap,
+            blockedTiles,
+          );
+          if (path.length > 0) {
+            pet.path = path;
+            pet.moveProgress = 0;
+            pet.restTimer = randomRange(PET_REST_MIN_SEC, PET_REST_MAX_SEC);
+            pet.state = PetState.WALK;
+            pet.frame = 0;
+            pet.frameTimer = 0;
+            break;
+          }
+        }
+      }
+
       let target: { col: number; row: number } | null = null;
       const roll = Math.random();
 
@@ -157,10 +205,14 @@ export function updatePet(
         const center = tileCenter(pet.tileCol, pet.tileRow);
         pet.x = center.x;
         pet.y = center.y;
-        pet.state = PetState.IDLE;
+        if (pet.restTimer > 0) {
+          pet.state = PetState.RESTING;
+        } else {
+          pet.state = PetState.IDLE;
+          pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
+        }
         pet.frame = 0;
         pet.frameTimer = 0;
-        pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
         break;
       }
 
@@ -182,6 +234,58 @@ export function updatePet(
         pet.path.shift();
         pet.moveProgress = 0;
       }
+      break;
+    }
+
+    case PetState.RESTING: {
+      pet.restTimer -= dt;
+      if (pet.restTimer <= 0) {
+        pet.state = PetState.IDLE;
+        pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
+      }
+      break;
+    }
+
+    case PetState.BONDED: {
+      pet.wanderTimer -= dt;
+
+      // Break bond if agent no longer exists or randomly
+      const bondedChar = characters.find((c) => c.id === pet.bondedAgentId);
+      if (!bondedChar || Math.random() < PET_BOND_BREAK_CHANCE) {
+        pet.bondedAgentId = null;
+        pet.state = PetState.IDLE;
+        pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
+        break;
+      }
+
+      if (pet.wanderTimer > 0) break;
+
+      // Pathfind to a tile near the bonded agent
+      const nearby = nearbyWalkable(
+        bondedChar.tileCol,
+        bondedChar.tileRow,
+        PET_APPROACH_RADIUS_TILES,
+        walkableTiles,
+      );
+      const target = nearby.length > 0 ? nearby[Math.floor(Math.random() * nearby.length)] : null;
+      if (target) {
+        const path = findPath(
+          pet.tileCol,
+          pet.tileRow,
+          target.col,
+          target.row,
+          tileMap,
+          blockedTiles,
+        );
+        if (path.length > 0) {
+          pet.path = path;
+          pet.moveProgress = 0;
+          pet.state = PetState.WALK;
+          pet.frame = 0;
+          pet.frameTimer = 0;
+        }
+      }
+      pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
       break;
     }
   }
