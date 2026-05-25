@@ -14,6 +14,7 @@ import {
   PET_HIT_HEIGHT,
   PET_RANDOM_COUNT,
   PET_ROTATION_INTERVAL_SEC,
+  PET_SCATTER_RADIUS_TILES,
   WAITING_BUBBLE_DURATION_SEC,
 } from '../../constants.js';
 import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js';
@@ -621,6 +622,18 @@ export class OfficeState {
         ch.seatTimer = -1;
         ch.path = [];
         ch.moveProgress = 0;
+      }
+      if (active) {
+        for (const pet of this.pets.values()) {
+          if (pet.matrixEffect === 'despawn') continue;
+          const dx = Math.abs(pet.tileCol - ch.tileCol);
+          const dy = Math.abs(pet.tileRow - ch.tileRow);
+          if (dx + dy <= PET_SCATTER_RADIUS_TILES) {
+            pet.wanderTimer = 0;
+            pet.path = [];
+            pet.moveProgress = 0;
+          }
+        }
       }
       this.rebuildFurnitureInstances();
     }
