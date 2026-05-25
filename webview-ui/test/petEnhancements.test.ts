@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import { OfficeState } from '../src/office/engine/officeState.js';
 import { updatePet } from '../src/office/engine/pets.js';
+import { setPetAnimSprites } from '../src/office/sprites/petSpriteData.js';
 import { type Character, Direction, type Pet, PetState } from '../src/office/types.js';
 
 function makePet(id: number, x: number, y: number): Pet {
@@ -126,4 +127,23 @@ test('updatePet BONDED breaks bond when agent disappears', () => {
   updatePet(pet, 0.1, [], [], new Set(), [], []); // empty characters array
   assert.equal(pet.bondedAgentId, null);
   assert.equal(pet.state, PetState.IDLE);
+});
+
+test('triggerPetEmote sets EMOTING state on target pet', () => {
+  // Register a dummy nod anim for pikachu so triggerPetEmote has something to trigger
+  setPetAnimSprites([
+    { speciesId: 'pikachu', animName: 'nod', frames: { down: [[]], up: [[]], right: [[]] } },
+  ]);
+  const os = new OfficeState();
+  os.pets.set(30, makePet(30, 100, 100)); // makePet uses speciesId 'pikachu'
+  os.triggerPetEmote(30, 'nod');
+  const pet = os.pets.get(30)!;
+  assert.equal(pet.state, PetState.EMOTING);
+  assert.equal(pet.emoteAnim, 'nod');
+  assert.equal(pet.frame, 0);
+});
+
+test('triggerPetEmote is a no-op for unknown petId', () => {
+  const os = new OfficeState();
+  os.triggerPetEmote(999, 'nod'); // should not throw
 });

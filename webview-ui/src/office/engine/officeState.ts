@@ -26,7 +26,7 @@ import {
   layoutToTileMap,
 } from '../layout/layoutSerializer.js';
 import { findPath, getWalkableTiles, isWalkable } from '../layout/tileMap.js';
-import { getLoadedPetSpecies, getPetSprites } from '../sprites/petSpriteData.js';
+import { getLoadedPetAnims, getLoadedPetSpecies, getPetSprites } from '../sprites/petSpriteData.js';
 import { getLoadedCharacterCount } from '../sprites/spriteData.js';
 import type { Pet } from '../types.js';
 import type {
@@ -38,7 +38,13 @@ import type {
   Seat,
   TileType as TileTypeVal,
 } from '../types.js';
-import { CharacterState, Direction, MATRIX_EFFECT_DURATION, TILE_SIZE } from '../types.js';
+import {
+  CharacterState,
+  Direction,
+  MATRIX_EFFECT_DURATION,
+  PetState,
+  TILE_SIZE,
+} from '../types.js';
 import { ActivityManager } from './activityManager.js';
 import { createCharacter, updateCharacter } from './characters.js';
 import { matrixEffectSeeds } from './matrixEffect.js';
@@ -940,5 +946,22 @@ export class OfficeState {
       }
     }
     return null;
+  }
+
+  triggerPetEmote(petId: number, preferredAnim?: string): void {
+    const pet = this.pets.get(petId);
+    if (!pet) return;
+    const available = getLoadedPetAnims(pet.speciesId);
+    const anim =
+      (preferredAnim && available.includes(preferredAnim) ? preferredAnim : null) ??
+      available[Math.floor(Math.random() * available.length)] ??
+      null;
+    if (!anim) return;
+    pet.state = PetState.EMOTING;
+    pet.emoteAnim = anim;
+    pet.emoteTimer = 0;
+    pet.frame = 0;
+    pet.frameTimer = 0;
+    pet.path = [];
   }
 }

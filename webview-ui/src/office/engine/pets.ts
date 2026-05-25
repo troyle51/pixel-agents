@@ -4,6 +4,7 @@ import {
   PET_APPROACH_RADIUS_TILES,
   PET_BOND_BREAK_CHANCE,
   PET_BOND_CHANCE,
+  PET_EMOTE_FRAME_DURATION_SEC,
   PET_REST_CHANCE,
   PET_REST_MAX_SEC,
   PET_REST_MIN_SEC,
@@ -13,7 +14,7 @@ import {
   PET_WANDER_PAUSE_MIN_SEC,
 } from '../../constants.js';
 import { findPath } from '../layout/tileMap.js';
-import { getPetSprites } from '../sprites/petSpriteData.js';
+import { getPetAnimFrames, getPetSprites } from '../sprites/petSpriteData.js';
 import type {
   Character,
   FurnitureCatalogEntry,
@@ -242,6 +243,27 @@ export function updatePet(
       if (pet.restTimer <= 0) {
         pet.state = PetState.IDLE;
         pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
+      }
+      break;
+    }
+
+    case PetState.EMOTING: {
+      if (!pet.emoteAnim) {
+        pet.state = PetState.IDLE;
+        pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
+        break;
+      }
+      pet.frameTimer += dt;
+      if (pet.frameTimer >= PET_EMOTE_FRAME_DURATION_SEC) {
+        pet.frameTimer -= PET_EMOTE_FRAME_DURATION_SEC;
+        pet.frame++;
+        const totalFrames = getPetAnimFrames(pet.speciesId, pet.emoteAnim)?.length ?? 4;
+        if (pet.frame >= totalFrames) {
+          pet.state = PetState.IDLE;
+          pet.emoteAnim = null;
+          pet.frame = 0;
+          pet.wanderTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
+        }
       }
       break;
     }

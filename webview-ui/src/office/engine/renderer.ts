@@ -44,7 +44,7 @@ import {
   ZZZ_COLOR,
 } from '../../constants.js';
 import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTiles.js';
-import { getPetSprite } from '../sprites/petSpriteData.js';
+import { getPetAnimSprite, getPetSprite } from '../sprites/petSpriteData.js';
 import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js';
 import {
   BUBBLE_PERMISSION_SPRITE,
@@ -60,7 +60,7 @@ import type {
   SpriteData,
   TileType as TileTypeVal,
 } from '../types.js';
-import { CharacterState, MATRIX_EFFECT_DURATION, TILE_SIZE, TileType } from '../types.js';
+import { CharacterState, MATRIX_EFFECT_DURATION, PetState, TILE_SIZE, TileType } from '../types.js';
 import { getWallInstances, hasWallSprites, wallColorToHex } from '../wallTiles.js';
 import { getCharacterSprite } from './characters.js';
 import { renderMatrixEffect } from './matrixEffect.js';
@@ -315,7 +315,10 @@ export function renderScene(
       if (pet.matrixEffect === 'despawn' && pet.matrixEffectTimer >= MATRIX_EFFECT_DURATION) {
         continue; // fully consumed — skip until cleared by rotation timer
       }
-      const spriteData = getPetSprite(pet.speciesId, pet.dir, pet.frame);
+      const spriteData =
+        pet.state === PetState.EMOTING && pet.emoteAnim
+          ? getPetAnimSprite(pet.speciesId, pet.emoteAnim, pet.dir, pet.frame)
+          : getPetSprite(pet.speciesId, pet.dir, pet.frame);
       if (!spriteData) continue;
       const petZY = pet.y + TILE_SIZE / 2 + CHARACTER_Z_SORT_OFFSET;
 

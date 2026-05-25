@@ -182,6 +182,10 @@ function App() {
     vscode.postMessage({ type: 'focusAgent', id: focusId });
   }, []);
 
+  const handlePetClick = useCallback((petId: number) => {
+    getOfficeState().triggerPetEmote(petId);
+  }, []);
+
   const officeState = getOfficeState();
 
   // Force dependency on editorTickForKeyboard to propagate keyboard-triggered re-renders
@@ -215,6 +219,7 @@ function App() {
       <OfficeCanvas
         officeState={officeState}
         onClick={handleClick}
+        onPetClick={handlePetClick}
         onAgentContextMenu={handleAgentContextMenu}
         isEditMode={editor.isEditMode}
         editorState={editorState}
