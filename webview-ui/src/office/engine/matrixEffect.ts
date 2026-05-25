@@ -44,8 +44,13 @@ export { generateSeeds as matrixEffectSeeds };
  * Render a character with a Matrix-style digital rain spawn/despawn effect.
  * Per-pixel rendering: each column sweeps top-to-bottom with a bright head and fading green trail.
  */
+interface CanvasContext2D {
+  fillStyle: string | { toString(): string };
+  fillRect(x: number, y: number, w: number, h: number): void;
+}
+
 export function renderMatrixEffect(
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasContext2D,
   entity: MatrixEffectEntity,
   spriteData: SpriteData,
   drawX: number,

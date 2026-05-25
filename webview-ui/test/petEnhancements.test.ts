@@ -3,9 +3,9 @@ import { test } from 'node:test';
 
 import { OfficeState } from '../src/office/engine/officeState.js';
 import { updatePet } from '../src/office/engine/pets.js';
-import { Direction, PetState } from '../src/office/types.js';
+import { type Character, Direction, type Pet, PetState } from '../src/office/types.js';
 
-function makePet(id: number, x: number, y: number) {
+function makePet(id: number, x: number, y: number): Pet {
   return {
     id,
     speciesId: 'pikachu',
@@ -81,7 +81,7 @@ test('setAgentActive scatters nearby pets — resets wanderTimer and clears path
     matrixEffectSeeds: [],
     toolName: null,
     isTyping: false,
-  } as any);
+  } as unknown as Character);
 
   // Pet 3 tiles away at tile (8,5) → world (136, 88) — within scatter radius (4)
   const nearPet = makePet(10, 136, 88);

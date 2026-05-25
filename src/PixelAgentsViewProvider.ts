@@ -28,6 +28,7 @@ import {
   loadExternalCharacterSprites,
   loadFloorTiles,
   loadFurnitureAssets,
+  loadPetAnimSprites,
   loadPetSprites,
   loadWallTiles,
   mergeCharacterSprites,
@@ -701,6 +702,12 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
             if (this.webview) {
               sendPetSpritesToWebview(this.webview, petSprites);
             }
+            const petAnimData = await loadPetAnimSprites(assetsRoot);
+            this.webview?.postMessage({
+              type: 'petAnimSpritesLoaded',
+              anims: petAnimData.anims,
+            });
+            console.log(`📤 Sent ${petAnimData.anims.length} pet anim sprite(s) to webview`);
           } catch (err) {
             console.error('[Extension] ❌ Error loading assets:', err);
           }

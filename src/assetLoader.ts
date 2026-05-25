@@ -537,6 +537,8 @@ export async function loadPetSprites(assetsRoot: string): Promise<LoadedPetSprit
   const entries = fs.readdirSync(petsDir);
   for (const entry of entries) {
     if (!/\.png$/i.test(entry)) continue;
+    // Skip emote files — they're named {species}-{anim}.png
+    if (/-(nod|attack)\.png$/i.test(entry)) continue;
     const speciesId = entry.replace(/\.png$/i, '').toLowerCase();
     const filePath = path.join(petsDir, entry);
     const resolvedFile = path.resolve(filePath);
@@ -570,6 +572,49 @@ export function sendPetSpritesToWebview(
     pets: petSprites.pets,
   });
   console.log(`📤 Sent ${petSprites.pets.length} pet sprite(s) to webview`);
+}
+
+export interface LoadedPetAnimSprite {
+  speciesId: string;
+  animName: string;
+  frames: PetDirectionSprites;
+}
+
+export interface LoadedPetAnimSprites {
+  anims: LoadedPetAnimSprite[];
+}
+
+export async function loadPetAnimSprites(assetsRoot: string): Promise<LoadedPetAnimSprites> {
+  const petsDir = path.join(assetsRoot, 'assets', 'pets');
+  const anims: LoadedPetAnimSprite[] = [];
+
+  if (!fs.existsSync(petsDir)) return { anims };
+
+  const entries = fs.readdirSync(petsDir);
+  for (const entry of entries) {
+    // Match {speciesId}-{animName}.png — split on LAST dash so nidoran-f-nod → speciesId='nidoran-f', animName='nod'
+    const match = /^(.+)-([a-z]+)\.png$/i.exec(entry);
+    if (!match) continue;
+    const speciesId = match[1].toLowerCase();
+    const animName = match[2].toLowerCase();
+    // Only load known anim types
+    if (animName !== 'nod' && animName !== 'attack') continue;
+    const filePath = path.join(petsDir, entry);
+    const resolvedFile = path.resolve(filePath);
+    const resolvedDir = path.resolve(petsDir);
+    if (!resolvedFile.startsWith(resolvedDir + path.sep)) continue;
+    try {
+      const pngBuffer = fs.readFileSync(filePath);
+      const frames = decodePetPng(pngBuffer);
+      anims.push({ speciesId, animName, frames });
+    } catch (err) {
+      console.warn(
+        `[AssetLoader] ⚠️  Error loading pet anim ${entry}: ${err instanceof Error ? err.message : err}`,
+      );
+    }
+  }
+  console.log(`[AssetLoader] ✅ Loaded ${anims.length} pet anim sprite(s)`);
+  return { anims };
 }
 
 /**

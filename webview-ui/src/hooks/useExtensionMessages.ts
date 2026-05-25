@@ -5,7 +5,12 @@ import type { OfficeState } from '../office/engine/officeState.js';
 import { setFloorSprites } from '../office/floorTiles.js';
 import { buildDynamicCatalog } from '../office/layout/furnitureCatalog.js';
 import { migrateLayoutColors } from '../office/layout/layoutSerializer.js';
-import { getLoadedPetSpecies, setPetSprites } from '../office/sprites/petSpriteData.js';
+import {
+  getLoadedPetSpecies,
+  type PetAnimSpriteInput,
+  setPetAnimSprites,
+  setPetSprites,
+} from '../office/sprites/petSpriteData.js';
 import { setCharacterTemplates } from '../office/sprites/spriteData.js';
 import { extractToolName } from '../office/toolUtils.js';
 import type { OfficeLayout, ToolActivity } from '../office/types.js';
@@ -528,6 +533,10 @@ export function useExtensionMessages(
           }>,
         );
         // Pets are spawned after layoutLoaded, which always arrives after petSpritesLoaded.
+      } else if (msg.type === 'petAnimSpritesLoaded') {
+        if (Array.isArray(msg.anims)) {
+          setPetAnimSprites(msg.anims as PetAnimSpriteInput[]);
+        }
       } else if (msg.type === 'agentTeamInfo') {
         const id = msg.id as number;
         os.setTeamInfo(
