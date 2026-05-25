@@ -305,56 +305,12 @@ function parseAnimEntry(
   return null;
 }
 
-function convert(pngBuf: Buffer, xmlStr: string, name: string, outDir: string): void {
-  const entry = parseAnimEntry(xmlStr, 'Walk');
-  if (!entry) {
-    console.log(`  ⚠️  No Walk anim found for ${name}, skipping`);
-    return;
-  }
-  const { frameWidth, frameHeight, frameCount } = entry;
-  const srcPng = PNG.sync.read(pngBuf);
-  const frameSize = frameWidth;
-  const outW = frameCount * frameSize;
-  const outH = 3 * frameSize;
-  const outPng = new PNG({ width: outW, height: outH });
-  outPng.data.fill(0);
-
-  const bodyRows = Math.min(frameSize, frameHeight); // don't read past body into shadow row
-  PMD_DIRS_TO_EXTRACT.forEach((pmdDir, dstRow) => {
-    const srcYStart = pmdDir * PMD_ROWS_PER_DIRECTION * frameHeight;
-    for (let f = 0; f < frameCount; f++) {
-      for (let y = 0; y < bodyRows; y++) {
-        for (let x = 0; x < frameSize; x++) {
-          const srcX = f * frameWidth + x;
-          const srcY = srcYStart + y;
-          if (srcY >= srcPng.height || srcX >= srcPng.width) continue;
-          const si = (srcY * srcPng.width + srcX) * 4;
-          const di = ((dstRow * frameSize + y) * outW + (f * frameSize + x)) * 4;
-          outPng.data[di] = srcPng.data[si];
-          outPng.data[di + 1] = srcPng.data[si + 1];
-          outPng.data[di + 2] = srcPng.data[si + 2];
-          outPng.data[di + 3] = srcPng.data[si + 3];
-        }
-      }
-    }
-  });
-
-  const outPath = path.join(outDir, `${name}.png`);
-  fs.writeFileSync(outPath, PNG.sync.write(outPng));
-  console.log(`  ✅ ${name}.png  (${outW}×${outH}, ${frameCount} frames)`);
-}
-
-function convertAnim(
-  pngBuf: Buffer,
-  xmlStr: string,
-  speciesName: string,
-  animName: string,
-  outDir: string,
-): boolean {
-  const entry = parseAnimEntry(xmlStr, animName);
-  if (!entry) return false;
-  const { frameWidth, frameHeight, frameCount } = entry;
-  const srcPng = PNG.sync.read(pngBuf);
+function extractDirectionRows(
+  srcPng: ReturnType<typeof PNG.sync.read>,
+  frameWidth: number,
+  frameHeight: number,
+  frameCount: number,
+): PNG {
   const frameSize = frameWidth;
   const outW = frameCount * frameSize;
   const outH = 3 * frameSize;
@@ -379,10 +335,41 @@ function convertAnim(
       }
     }
   });
+  return outPng;
+}
+
+function convert(pngBuf: Buffer, xmlStr: string, name: string, outDir: string): void {
+  const entry = parseAnimEntry(xmlStr, 'Walk');
+  if (!entry) {
+    console.log(`  ⚠️  No Walk anim found for ${name}, skipping`);
+    return;
+  }
+  const { frameWidth, frameHeight, frameCount } = entry;
+  const srcPng = PNG.sync.read(pngBuf);
+  const outPng = extractDirectionRows(srcPng, frameWidth, frameHeight, frameCount);
+  const outPath = path.join(outDir, `${name}.png`);
+  fs.writeFileSync(outPath, PNG.sync.write(outPng));
+  console.log(`  ✅ ${name}.png  (${outPng.width}×${outPng.height}, ${frameCount} frames)`);
+}
+
+function convertAnim(
+  pngBuf: Buffer,
+  xmlStr: string,
+  speciesName: string,
+  animName: string,
+  outDir: string,
+): boolean {
+  const entry = parseAnimEntry(xmlStr, animName);
+  if (!entry) return false;
+  const { frameWidth, frameHeight, frameCount } = entry;
+  const srcPng = PNG.sync.read(pngBuf);
+  const outPng = extractDirectionRows(srcPng, frameWidth, frameHeight, frameCount);
   const suffix = animName.toLowerCase();
   const outPath = path.join(outDir, `${speciesName}-${suffix}.png`);
   fs.writeFileSync(outPath, PNG.sync.write(outPng));
-  console.log(`  ✅ ${speciesName}-${suffix}.png  (${outW}×${outH}, ${frameCount} frames)`);
+  console.log(
+    `  ✅ ${speciesName}-${suffix}.png  (${outPng.width}×${outPng.height}, ${frameCount} frames)`,
+  );
   return true;
 }
 
@@ -429,57 +416,70 @@ async function main(): Promise<void> {
   const speciesToProcess = debugMode ? SPECIES.slice(0, 1) : SPECIES;
 
   for (const { num, name } of speciesToProcess) {
-    const outPath = path.join(outDir, `${name}.png`);
-    const walkExists = fs.existsSync(outPath);
+    const walkOutPath = path.join(outDir, `${name}.png`);
+    const walkExists = fs.existsSync(walkOutPath) && !debugMode;
 
-    if (!walkExists || debugMode) {
-      process.stdout.write(`Downloading ${name} (#${num})... `);
-      try {
+    if (walkExists) {
+      process.stdout.write(`Skipping ${name} walk — already downloaded\n`);
+    }
+
+    // Determine which emote files are needed
+    const missingEmotes = debugMode
+      ? []
+      : EMOTE_ANIMS.filter(
+          (animName) => !fs.existsSync(path.join(outDir, `${name}-${animName.toLowerCase()}.png`)),
+        );
+
+    if (walkExists && missingEmotes.length === 0) continue;
+
+    // Fetch Walk PNG if needed
+    let walkBuf: Buffer | null = null;
+    let xmlStr: string | null = null;
+
+    try {
+      if (!walkExists) {
+        process.stdout.write(`Downloading ${name} (#${num})... `);
         const [pngBuf, xmlBuf] = await Promise.all([
           fetchBuffer(`${BASE_URL}/${num}/Walk-Anim.png`),
           fetchBuffer(`${BASE_URL}/${num}/AnimData.xml`),
         ]);
+        walkBuf = pngBuf;
+        xmlStr = xmlBuf.toString('utf-8');
         process.stdout.write('converting... ');
         if (debugMode) {
           console.log('');
-          convertDebug(pngBuf, xmlBuf.toString('utf-8'), name, outDir);
+          convertDebug(walkBuf, xmlStr, name, outDir);
         } else {
-          convert(pngBuf, xmlBuf.toString('utf-8'), name, outDir);
+          convert(walkBuf, xmlStr, name, outDir);
         }
-      } catch (err) {
-        console.log(`  ❌ ${name}: ${err instanceof Error ? err.message : err}`);
       }
-    }
 
-    if (!debugMode) {
-      // Fetch emote anims — always check even when Walk PNG already existed
-      let needsXml = true;
-      let xmlStr: string | null = null;
-      for (const animName of EMOTE_ANIMS) {
-        const emoteOutPath = path.join(outDir, `${name}-${animName.toLowerCase()}.png`);
-        if (fs.existsSync(emoteOutPath)) {
-          continue;
-        }
-        // Lazy-fetch AnimData.xml on first emote that needs downloading
-        if (needsXml) {
-          needsXml = false;
+      // Emote anims
+      if (!debugMode && missingEmotes.length > 0) {
+        if (xmlStr === null) {
+          // Walk was skipped — need to fetch XML for emotes
           try {
             const xmlBuf = await fetchBuffer(`${BASE_URL}/${num}/AnimData.xml`);
             xmlStr = xmlBuf.toString('utf-8');
-          } catch {
-            // Can't fetch XML — skip all emotes for this species
-            break;
+          } catch (err) {
+            console.log(`  ❌ ${name} (XML): ${err instanceof Error ? err.message : err}`);
+            continue;
           }
         }
-        if (!xmlStr) break;
-        try {
-          const animUrl = `${BASE_URL}/${num}/${animName}-Anim.png`;
-          const emotePng = await fetchBuffer(animUrl);
-          convertAnim(emotePng, xmlStr, name, animName, outDir);
-        } catch {
-          // Not all species have all anims — silently skip missing ones
+        for (const animName of missingEmotes) {
+          try {
+            const animUrl = `${BASE_URL}/${num}/${animName}-Anim.png`;
+            const emotePng = await fetchBuffer(animUrl);
+            convertAnim(emotePng, xmlStr, name, animName, outDir);
+          } catch (err) {
+            if (!(err instanceof Error && err.message.startsWith('HTTP 404'))) {
+              console.log(`  ⚠️  ${name} ${animName}: ${err instanceof Error ? err.message : err}`);
+            }
+          }
         }
       }
+    } catch (err) {
+      console.log(`  ❌ ${name}: ${err instanceof Error ? err.message : err}`);
     }
   }
 
