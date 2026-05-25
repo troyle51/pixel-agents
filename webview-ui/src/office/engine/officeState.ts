@@ -635,6 +635,7 @@ export class OfficeState {
           const dx = Math.abs(pet.tileCol - ch.tileCol);
           const dy = Math.abs(pet.tileRow - ch.tileRow);
           if (dx + dy <= PET_SCATTER_RADIUS_TILES) {
+            pet.state = PetState.IDLE;
             pet.wanderTimer = 0;
             pet.path = [];
             pet.moveProgress = 0;
